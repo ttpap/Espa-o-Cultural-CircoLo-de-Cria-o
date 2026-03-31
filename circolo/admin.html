@@ -397,7 +397,12 @@
           <!-- Oficineiros ativos -->
           <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:var(--space-3);flex-shrink:0;">
             <span style="font-size:var(--text-sm);font-weight:var(--weight-semibold);color:var(--color-ink);">👥 Oficineiros ativos</span>
-            <button class="btn btn-primary btn-sm" onclick="openNewMemberModal()">+ Novo oficineiro</button>
+            <div style="display:flex;gap:var(--space-2);align-items:center;">
+              <button class="btn btn-ghost btn-sm" onclick="copiarLinkCadastro(this)" style="display:flex;align-items:center;gap:var(--space-1);">
+                🔗 Copiar link de cadastro
+              </button>
+              <button class="btn btn-primary btn-sm" onclick="openNewMemberModal()">+ Novo oficineiro</button>
+            </div>
           </div>
           <div class="grid-3-scroll" id="membersGrid" style="flex:1;min-height:0;"></div>
 
@@ -1201,6 +1206,19 @@
     const sel = document.getElementById('wsInstructor');
     sel.innerHTML = '';
     ms.forEach(m => { const o = document.createElement('option'); o.value = m.id; o.textContent = m.name; sel.appendChild(o); });
+  }
+
+  // ── Copiar link de cadastro ──
+  function copiarLinkCadastro(btn) {
+    const link = 'https://circolo.vercel.app/cadastro-oficineiro.html';
+    navigator.clipboard.writeText(link).then(() => {
+      const original = btn.innerHTML;
+      btn.innerHTML = '✅ Link copiado!';
+      btn.disabled = true;
+      setTimeout(() => { btn.innerHTML = original; btn.disabled = false; }, 2500);
+    }).catch(() => {
+      prompt('Copie o link abaixo:', link);
+    });
   }
 
   // ── Resetar senha do oficineiro ──
