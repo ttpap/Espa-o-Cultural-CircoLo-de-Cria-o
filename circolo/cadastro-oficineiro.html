@@ -637,6 +637,18 @@
       oficinas_ids:   [],
     };
 
+    // Cria conta auth com senha padrão 123456
+    const email = payload.email;
+    const { error: authErr } = await sb.auth.signUp({ email, password: '123456' });
+    if (authErr && !authErr.message.includes('already registered')) {
+      btn.disabled = false;
+      btn.innerHTML = '<span id="btnNextText">Enviar cadastro</span><span>✓</span>';
+      showToast('Erro ao criar conta: ' + authErr.message, 'error');
+      return;
+    }
+    // Garante que a sessão do novo usuário não persiste nesta página pública
+    await sb.auth.signOut();
+
     const { error } = await sb.from('inscricoes_oficineiros').insert(payload);
     btn.disabled = false;
     btn.innerHTML = '<span id="btnNextText">Enviar cadastro</span><span>✓</span>';

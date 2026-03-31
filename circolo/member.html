@@ -377,18 +377,14 @@
             </div>
             <div class="card-body flex flex-col gap-4">
               <div class="field">
-                <label>Senha atual</label>
-                <input class="input" type="password" placeholder="••••••••">
-              </div>
-              <div class="field">
                 <label>Nova senha</label>
-                <input class="input" type="password" placeholder="••••••••">
+                <input class="input" type="password" id="newPassInput" placeholder="Mínimo 6 caracteres">
               </div>
               <div class="field">
                 <label>Confirmar nova senha</label>
-                <input class="input" type="password" placeholder="••••••••">
+                <input class="input" type="password" id="confirmPassInput" placeholder="Repita a nova senha">
               </div>
-              <button class="btn btn-ghost" onclick="showToast('Senha atualizada!')">Alterar senha</button>
+              <button class="btn btn-ghost" onclick="changePassword()">Alterar senha</button>
             </div>
           </div>
         </div>
@@ -547,10 +543,41 @@
   }
 
   async function saveProfile() {
-    const name = document.getElementById('profileNameInput').value.trim();
-    const { error } = await sb.from('profiles').update({ name }).eq('id', Auth.currentUser.id);
-    if (error) { showToast('Erro ao salvar.', 'error'); return; }
-    showToast('Perfil atualizado com sucesso!');
+    const name  = document.getElementById('profileNameInput').value.trim();
+    const email = document.getElementById('profileEmailInput').value.trim();
+    if (!name) { showToast('Preencha o nome.', 'error'); return; }
+
+    const initials = name.split(' ').map(p => p[0]).filter(Boolean).slice(0,2).join('').toUpperCase();
+    const { error: dbErr } = await sb.from('profiles').update({ name, initials, email }).eq('id', Auth.currentUser.id);
+    if (dbErr) { showToast('Erro ao salvar perfil: ' + dbErr.message, 'error'); return; }
+
+    // Atualiza o e-mail no auth se mudou
+    if (email !== Auth.currentUser.email) {
+      const { error: authErr } = await sb.auth.updateUser({ email });
+      if (authErr) { showToast('Perfil salvo, mas erro ao atualizar e-mail: ' + authErr.message, 'error'); return; }
+      showToast('Perfil atualizado! Verifique o novo e-mail para confirmar a alteração.');
+    } else {
+      showToast('Perfil atualizado com sucesso!');
+    }
+
+    document.getElementById('sidebarName').textContent = name;
+    document.getElementById('sidebarInitials').textContent = initials;
+    document.getElementById('profileAvatar').textContent  = initials;
+    document.getElementById('profileName').textContent    = name;
+  }
+
+  async function changePassword() {
+    const newPass     = document.getElementById('newPassInput').value;
+    const confirmPass = document.getElementById('confirmPassInput').value;
+    if (!newPass || newPass.length < 6) { showToast('A senha precisa ter pelo menos 6 caracteres.', 'error'); return; }
+    if (newPass !== confirmPass)         { showToast('As senhas não coincidem.', 'error'); return; }
+
+    const { error } = await sb.auth.updateUser({ password: newPass });
+    if (error) { showToast('Erro ao alterar senha: ' + error.message, 'error'); return; }
+
+    document.getElementById('newPassInput').value     = '';
+    document.getElementById('confirmPassInput').value = '';
+    showToast('Senha alterada com sucesso!');
   }
 
   // ── Init ──
