@@ -1186,6 +1186,7 @@
             </div>
             <div style="display:flex;gap:4px;flex-shrink:0;">
               <button class="btn btn-ghost btn-sm btn-icon" title="Editar" onclick="editMember(${mJson})">✏️</button>
+              <button class="btn btn-ghost btn-sm btn-icon" title="Resetar senha" onclick="resetMemberPassword('${m.id}','${(m.name||'').replace(/'/g,'')}')">🔑</button>
               <button class="btn btn-ghost btn-sm btn-icon" title="Apagar" style="color:var(--color-red);" onclick="deleteMember('${m.id}','${(m.name||'').replace(/'/g,'')}')">🗑</button>
             </div>
           </div>
@@ -1200,6 +1201,32 @@
     const sel = document.getElementById('wsInstructor');
     sel.innerHTML = '';
     ms.forEach(m => { const o = document.createElement('option'); o.value = m.id; o.textContent = m.name; sel.appendChild(o); });
+  }
+
+  // ── Resetar senha do oficineiro ──
+  async function resetMemberPassword(userId, name) {
+    if (!confirm(`Resetar a senha de "${name}"? Uma nova senha temporária será gerada.`)) return;
+
+    const { data: { session } } = await sb.auth.getSession();
+    const resp = await fetch(`${SUPABASE_URL}/functions/v1/create-oficineiro`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${session.access_token}`,
+        'apikey': SUPABASE_ANON,
+      },
+      body: JSON.stringify({ action: 'reset-password', user_id: userId }),
+    });
+
+    const result = await resp.json();
+    if (!resp.ok || result.error) {
+      showToast('Erro ao resetar senha: ' + (result.error || 'Falha'), 'error');
+      return;
+    }
+
+    // Mostra a nova senha em um alert para o admin copiar
+    alert(`✅ Senha de "${name}" resetada!\n\nNova senha temporária:\n\n${result.new_password}\n\nEnvie esta senha para o oficineiro.`);
+    showToast(`Senha de ${name} resetada com sucesso!`);
   }
 
   // ── Aprovar inscrição ──

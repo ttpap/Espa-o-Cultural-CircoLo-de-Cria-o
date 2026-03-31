@@ -1,0 +1,8 @@
+{
+  "rewrites": [
+    { "source": "/cadastro", "destination": "/cadastro-oficineiro.html" },
+    { "source": "/admin", "destination": "/admin.html" },
+    { "source": "/login", "destination": "/login.html" },
+    { "source": "/", "destination": "/index.html" }
+  ]
+}
