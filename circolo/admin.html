@@ -649,9 +649,17 @@
     document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
     document.querySelectorAll('.nav-item').forEach(b => b.classList.remove('active'));
     document.getElementById(`panel-${tab}`).classList.add('active');
-    document.querySelectorAll('.tab-btn').forEach(b => { if (b.textContent.trim().toLowerCase() === titles[tab].toLowerCase()) b.classList.add('active'); });
+    let activeBtn = null;
+    document.querySelectorAll('.tab-btn').forEach(b => {
+      if (b.textContent.trim().toLowerCase() === titles[tab].toLowerCase()) {
+        b.classList.add('active');
+        activeBtn = b;
+      }
+    });
     document.querySelectorAll('.nav-item').forEach(b => { if (b.textContent.trim() === titles[tab]) b.classList.add('active'); });
     document.getElementById('pageTitle').textContent = titles[tab];
+    // Auto-scroll tab into view on mobile
+    if (activeBtn) activeBtn.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
     if (tab === 'calendario') loadAdminCalendar();
   }
 
@@ -830,26 +838,26 @@
     const ticketLabel = { gratuito: '🎟️ Gratuito', financeiro: '💰 Financeiro', contribuicao: '🤝 Contribuição' };
     document.getElementById('eventsTable').innerHTML = events.length ? events.map(ev => `
       <tr>
-        <td style="width:48px;">
+        <td data-label="" style="width:48px;min-height:0;padding-bottom:var(--space-2);">
           ${ev.image_url ? `<img src="${ev.image_url}" style="width:40px;height:40px;object-fit:cover;border-radius:var(--radius-md);border:1px solid var(--color-border-light);">` : '<div style="width:40px;height:40px;background:var(--color-cream);border-radius:var(--radius-md);display:flex;align-items:center;justify-content:center;font-size:18px;">🎭</div>'}
         </td>
-        <td>
-          <span style="font-weight:600;">${ev.title}</span>
-          ${ev.instructor ? `<div style="font-size:var(--text-xs);color:var(--color-muted);">${ev.instructor}</div>` : ''}
+        <td data-label="Evento">
+          <div><span style="font-weight:600;">${ev.title}</span>
+          ${ev.instructor ? `<div style="font-size:var(--text-xs);color:var(--color-muted);">${ev.instructor}</div>` : ''}</div>
         </td>
-        <td><span class="badge badge-${ev.type} badge-dot">${Calendar.typeLabel(ev.type)}</span></td>
-        <td>${formatDate(ev.date, { day: 'numeric', month: 'short', year: 'numeric' })}</td>
-        <td style="white-space:nowrap;">${ev.time || '—'}</td>
-        <td style="white-space:nowrap;color:var(--color-muted);">${ev.time_end || '—'}</td>
-        <td style="color:var(--color-muted);">${ev.capacity ? ev.capacity + ' vagas' : '—'}</td>
-        <td style="white-space:nowrap;">
+        <td data-label="Tipo"><span class="badge badge-${ev.type} badge-dot">${Calendar.typeLabel(ev.type)}</span></td>
+        <td data-label="Data">${formatDate(ev.date, { day: 'numeric', month: 'short', year: 'numeric' })}</td>
+        <td data-label="Início" style="white-space:nowrap;">${ev.time || '—'}</td>
+        <td data-label="Fim" class="m-hide" style="white-space:nowrap;color:var(--color-muted);">${ev.time_end || '—'}</td>
+        <td data-label="Lotação" class="m-hide" style="color:var(--color-muted);">${ev.capacity ? ev.capacity + ' vagas' : '—'}</td>
+        <td data-label="Ingresso" style="white-space:nowrap;">
           <span class="badge ${ev.ticket_type === 'gratuito' ? 'badge-success' : ev.ticket_type === 'financeiro' ? 'badge-neutral' : 'badge-apresentacao'}" style="font-size:10px;">
             ${ticketLabel[ev.ticket_type] || '🎟️ Gratuito'}
           </span>
           ${ev.price && ev.ticket_type !== 'gratuito' ? `<div style="font-size:var(--text-xs);color:var(--color-muted);">R$ ${ev.price}</div>` : ''}
         </td>
-        <td style="color:var(--color-muted);">${ev.location || '—'}</td>
-        <td style="display:flex;gap:4px;align-items:center;">
+        <td data-label="Local" class="m-hide" style="color:var(--color-muted);">${ev.location || '—'}</td>
+        <td class="td-actions">
           <button class="btn btn-ghost btn-sm btn-icon" title="Editar" onclick="editEvent(${JSON.stringify(ev).replace(/"/g,'&quot;')})">✏️</button>
           <button class="btn btn-ghost btn-sm btn-icon" title="Apagar" onclick="deleteEvent('${ev.id}','${(ev.image_url||'').replace(/'/g,'')}')">🗑</button>
         </td>
@@ -952,29 +960,30 @@
   async function renderWorkshopsTable() {
     const { data } = await sb.from('workshops').select('*').order('day_of_week');
     const ws = data || [];
-    document.getElementById('workshopsTable').innerHTML = ws.map(w => {
-      const pct = Math.round(w.enrolled / w.capacity * 100);
+    document.getElementById('workshopsTable').innerHTML = ws.length ? ws.map(w => {
+      const pct = Math.round((w.enrolled||0) / (w.capacity||1) * 100);
       return `<tr>
-        <td><span style="font-weight:600;">${w.title}</span></td>
-        <td>${w.instructor_name}</td>
-        <td>${w.day_of_week}</td>
-        <td>${w.time}</td>
-        <td style="color:var(--color-muted);">${w.duration}</td>
-        <td>
+        <td data-label="Oficina"><span style="font-weight:600;">${w.title}</span></td>
+        <td data-label="Oficineiro" class="m-hide">${w.instructor_name || '—'}</td>
+        <td data-label="Dia">${w.day_of_week}</td>
+        <td data-label="Horário">${w.time || '—'}</td>
+        <td data-label="Duração" class="m-hide" style="color:var(--color-muted);">${w.duration || '—'}</td>
+        <td data-label="Inscritos">
           <div class="flex items-center gap-2">
-            <div style="width:60px;height:4px;background:var(--color-border-light);border-radius:var(--radius-full);overflow:hidden;">
+            <div style="width:50px;height:4px;background:var(--color-border-light);border-radius:var(--radius-full);overflow:hidden;">
               <div style="height:100%;width:${pct}%;background:var(--gradient-brand);border-radius:var(--radius-full);"></div>
             </div>
-            <span style="font-size:var(--text-xs);color:var(--color-muted);">${w.enrolled}/${w.capacity}</span>
+            <span style="font-size:var(--text-xs);color:var(--color-muted);">${w.enrolled||0}/${w.capacity||0}</span>
           </div>
         </td>
-        <td><span class="badge ${w.enrolled >= w.capacity ? 'badge-neutral' : 'badge-success'}">${w.enrolled >= w.capacity ? 'Lotado' : 'Com vagas'}</span></td>
-        <td style="display:flex;gap:4px;">
+        <td data-label="Status"><span class="badge ${w.enrolled >= w.capacity ? 'badge-neutral' : 'badge-success'}">${w.enrolled >= w.capacity ? 'Lotado' : 'Com vagas'}</span></td>
+        <td class="td-actions">
           <button class="btn btn-ghost btn-sm btn-icon" onclick="editWorkshop(${JSON.stringify(w).replace(/"/g,'&quot;')})">✏️</button>
           <button class="btn btn-ghost btn-sm btn-icon" onclick="deleteWorkshop('${w.id}')">🗑</button>
         </td>
       </tr>`;
-    }).join('');
+    }).join('')
+    : '<tr><td colspan="8" class="empty-state" style="padding:var(--space-8);">Nenhuma oficina cadastrada.</td></tr>';
   }
 
   // ── Members grid ──
