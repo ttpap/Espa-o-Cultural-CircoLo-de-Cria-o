@@ -191,7 +191,7 @@
       </div>
       <div class="nav-item" onclick="showTab('membros')">
         <svg class="nav-icon" viewBox="0 0 20 20" fill="currentColor"><path d="M9 6a3 3 0 11-6 0 3 3 0 016 0zM17 6a3 3 0 11-6 0 3 3 0 016 0zM12.93 17c.046-.327.07-.66.07-1a6.97 6.97 0 00-1.5-4.33A5 5 0 0119 16v1h-6.07zM6 11a5 5 0 015 5v1H1v-1a5 5 0 015-5z"/></svg>
-        Membros
+        Oficineiros
       </div>
     </div>
 
@@ -227,7 +227,7 @@
           <button class="tab-btn" onclick="showTab('calendario')">Calendário</button>
           <button class="tab-btn" onclick="showTab('eventos')">Eventos</button>
           <button class="tab-btn" onclick="showTab('oficinas')">Oficinas</button>
-          <button class="tab-btn" onclick="showTab('membros')">Membros</button>
+          <button class="tab-btn" onclick="showTab('membros')">Oficineiros</button>
         </div>
       </div>
     </div>
@@ -382,7 +382,7 @@
       <div class="tab-panel" id="panel-membros">
         <div class="panel-toolbar" style="margin-bottom:var(--space-4);">
           <div></div>
-          <button class="btn btn-primary" onclick="openModal('newMemberModal')">+ Novo membro</button>
+          <button class="btn btn-primary" onclick="openNewMemberModal()">+ Novo oficineiro</button>
         </div>
         <div class="grid-3-scroll" id="membersGrid"></div>
       </div>
@@ -595,14 +595,15 @@
   </div>
 </div>
 
-<!-- ══ MODAL: Novo membro ══ -->
+<!-- ══ MODAL: Novo / editar oficineiro ══ -->
 <div class="modal-overlay" id="newMemberModal">
   <div class="modal">
     <div class="modal-header">
-      <span class="modal-title">Novo oficineiro</span>
+      <span class="modal-title" id="memModalTitle">Novo oficineiro</span>
       <button class="btn btn-ghost btn-icon btn-sm" onclick="closeModal('newMemberModal')">✕</button>
     </div>
     <div class="modal-body">
+      <input type="hidden" id="memEditId">
       <div class="field">
         <label>Nome completo</label>
         <input class="input" id="memName" placeholder="Ex.: Fernanda Lima">
@@ -611,7 +612,7 @@
         <label>E-mail</label>
         <input class="input" type="email" id="memEmail" placeholder="email@exemplo.com">
       </div>
-      <div class="form-row">
+      <div id="memPassRow" class="form-row">
         <div class="field">
           <label>Senha provisória</label>
           <input class="input" id="memPass" placeholder="••••••••">
@@ -623,7 +624,7 @@
     </div>
     <div class="modal-footer">
       <button class="btn btn-ghost" onclick="closeModal('newMemberModal')">Cancelar</button>
-      <button class="btn btn-primary" onclick="saveMember()">Criar membro</button>
+      <button class="btn btn-primary" id="memSubmitBtn" onclick="saveMember()">Criar oficineiro</button>
     </div>
   </div>
 </div>
@@ -643,7 +644,7 @@
   const DAY_INDEX = { 'Domingo':0,'Segunda':1,'Terça':2,'Quarta':3,'Quinta':4,'Sexta':5,'Sábado':6 };
 
   // ── Tab navigation ──
-  const titles = { dashboard: 'Dashboard', calendario: 'Calendário', eventos: 'Eventos', oficinas: 'Oficinas', membros: 'Membros' };
+  const titles = { dashboard: 'Dashboard', calendario: 'Calendário', eventos: 'Eventos', oficinas: 'Oficinas', membros: 'Oficineiros' };
   function showTab(tab) {
     document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
     document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
@@ -994,13 +995,18 @@
     const ws = workshops || [];
     document.getElementById('membersGrid').innerHTML = ms.map(m => {
       const mws = ws.filter(w => w.instructor_id === m.id);
+      const mJson = JSON.stringify(m).replace(/"/g,'&quot;');
       return `
-        <div class="member-card" style="flex-direction:column;align-items:flex-start;gap:var(--space-4);">
+        <div class="member-card" style="flex-direction:column;align-items:flex-start;gap:var(--space-3);">
           <div class="flex items-center gap-4" style="width:100%;">
             <div class="member-avatar-lg">${m.initials || m.name.slice(0,2).toUpperCase()}</div>
-            <div class="member-info">
+            <div class="member-info" style="flex:1;min-width:0;">
               <div class="member-name">${m.name}</div>
               <div class="member-email">${m.email}</div>
+            </div>
+            <div style="display:flex;gap:4px;flex-shrink:0;">
+              <button class="btn btn-ghost btn-sm btn-icon" title="Editar oficineiro" onclick="editMember(${mJson})">✏️</button>
+              <button class="btn btn-ghost btn-sm btn-icon" title="Apagar oficineiro" style="color:var(--color-red);" onclick="deleteMember('${m.id}','${(m.name||'').replace(/'/g,'')}')">🗑</button>
             </div>
           </div>
           <div class="member-workshops">
@@ -1150,16 +1156,84 @@
     loadAdminCalendar(); // atualiza calendário também
   }
 
+  // ── Open new member modal ──
+  function openNewMemberModal() {
+    document.getElementById('memEditId').value = '';
+    document.getElementById('memModalTitle').textContent = 'Novo oficineiro';
+    document.getElementById('memSubmitBtn').textContent = 'Criar oficineiro';
+    document.getElementById('memName').value = '';
+    document.getElementById('memEmail').value = '';
+    document.getElementById('memPass').value = '';
+    document.getElementById('memEmail').disabled = false;
+    document.getElementById('memPassRow').style.display = '';
+    openModal('newMemberModal');
+  }
+
+  // ── Edit member modal ──
+  function editMember(m) {
+    document.getElementById('memEditId').value = m.id;
+    document.getElementById('memModalTitle').textContent = 'Editar oficineiro';
+    document.getElementById('memSubmitBtn').textContent = 'Salvar alterações';
+    document.getElementById('memName').value = m.name || '';
+    document.getElementById('memEmail').value = m.email || '';
+    document.getElementById('memEmail').disabled = true; // e-mail não pode ser alterado via client
+    document.getElementById('memPass').value = '';
+    document.getElementById('memPassRow').style.display = 'none';
+    openModal('newMemberModal');
+  }
+
+  // ── Save member (create + edit) ──
   async function saveMember() {
     const name = document.getElementById('memName').value.trim();
     const email = document.getElementById('memEmail').value.trim();
-    const password = document.getElementById('memPass').value;
+    const editId = document.getElementById('memEditId').value;
     if (!name || !email) { showToast('Preencha nome e e-mail.', 'error'); return; }
-    const { error } = await sb.auth.signUp({ email, password: password || '123456', options: { data: { name, role: 'member', initials: name.split(' ').map(p=>p[0]).slice(0,2).join('').toUpperCase() } } });
-    if (error) { showToast('Erro ao criar membro.', 'error'); return; }
-    showToast(`Membro ${name} criado!`);
+    const btn = document.getElementById('memSubmitBtn');
+    btn.disabled = true; btn.textContent = 'Salvando…';
+
+    if (editId) {
+      // Editar: atualiza apenas o perfil na tabela profiles
+      const initials = name.split(' ').map(p=>p[0]).filter(Boolean).slice(0,2).join('').toUpperCase();
+      const { error } = await sb.from('profiles').update({ name, initials }).eq('id', editId);
+      btn.disabled = false; btn.textContent = 'Salvar alterações';
+      if (error) { showToast('Erro ao atualizar: ' + error.message, 'error'); return; }
+      showToast(`Oficineiro ${name} atualizado!`);
+    } else {
+      const password = document.getElementById('memPass').value;
+      const { error } = await sb.auth.signUp({ email, password: password || '123456', options: { data: { name, role: 'member', initials: name.split(' ').map(p=>p[0]).filter(Boolean).slice(0,2).join('').toUpperCase() } } });
+      btn.disabled = false; btn.textContent = 'Criar oficineiro';
+      if (error) { showToast('Erro ao criar oficineiro: ' + error.message, 'error'); return; }
+      showToast(`Oficineiro ${name} criado!`);
+    }
     closeModal('newMemberModal');
     renderMembersGrid();
+  }
+
+  // ── Delete member ──
+  async function deleteMember(id, name) {
+    if (!confirm(`Apagar o oficineiro "${name}"? Esta ação não pode ser desfeita.`)) return;
+    const { error } = await sb.from('profiles').delete().eq('id', id);
+    if (error) { showToast('Erro ao remover oficineiro: ' + error.message, 'error'); return; }
+    showToast('Oficineiro removido.');
+    renderMembersGrid();
+    loadDashboard();
+  }
+
+  // ── Open event detail from dashboard ──
+  function openEventDetail(ev) {
+    const dateObj = ev.date instanceof Date ? ev.date : new Date(ev.date);
+    const title = formatDate(dateObj, { weekday: 'long', day: 'numeric', month: 'long' });
+    // Normalize: ensure date is a Date object for buildDayDetailHTML
+    const evNorm = { ...ev, date: dateObj };
+    document.getElementById('dayDetailTitle').textContent = title;
+    document.getElementById('dayDetailBody').innerHTML = buildDayDetailHTML([evNorm], []);
+    const isoDate = `${dateObj.getFullYear()}-${String(dateObj.getMonth()+1).padStart(2,'0')}-${String(dateObj.getDate()).padStart(2,'0')}`;
+    document.getElementById('dayDetailNewBtn').onclick = () => {
+      closeModal('dayDetailModal');
+      openNewEventModal();
+      document.getElementById('evDate').value = isoDate;
+    };
+    openModal('dayDetailModal');
   }
 
   async function deleteEventFromCalendar(id, imageUrl) {
@@ -1223,7 +1297,7 @@
           const ticket = TICKET_BADGE[d.ticket_type] || TICKET_BADGE.gratuito;
           const timeStr = d.time ? (d.time_end ? `${d.time} – ${d.time_end}` : d.time) : '';
           return `
-          <div style="display:flex;gap:var(--space-3);background:var(--color-warm-white);border:1px solid var(--color-border-light);border-radius:var(--radius-xl);overflow:hidden;cursor:pointer;transition:box-shadow .15s;" onmouseover="this.style.boxShadow='var(--shadow-md)'" onmouseout="this.style.boxShadow=''">
+          <div style="display:flex;gap:var(--space-3);background:var(--color-warm-white);border:1px solid var(--color-border-light);border-radius:var(--radius-xl);overflow:hidden;cursor:pointer;transition:box-shadow .15s;" onmouseover="this.style.boxShadow='var(--shadow-md)'" onmouseout="this.style.boxShadow=''" onclick="openEventDetail(${JSON.stringify(d).replace(/"/g,'&quot;')})">
             <!-- Cartaz ou ícone -->
             <div style="flex-shrink:0;width:70px;">
               ${d.image_url
