@@ -727,9 +727,26 @@
       html += events.map(ev => {
         const ticket = TICKET_BADGE[ev.ticket_type] || TICKET_BADGE.gratuito;
         const timeStr = ev.time ? (ev.time_end ? `${ev.time} – ${ev.time_end}` : ev.time) : '';
+        const evJson = JSON.stringify(ev).replace(/"/g,'&quot;');
+        const imgUrl = (ev.image_url||'').replace(/'/g,'');
         return `
         <div style="background:var(--color-white);border:1px solid var(--color-border-light);border-radius:var(--radius-xl);overflow:hidden;box-shadow:var(--shadow-sm);">
-          ${ev.image_url ? `<img src="${ev.image_url}" alt="${ev.title}" style="width:100%;height:140px;object-fit:cover;display:block;">` : ''}
+          <!-- Cartaz com botões sobrepostos -->
+          <div style="position:relative;">
+            ${ev.image_url
+              ? `<img src="${ev.image_url}" alt="${ev.title}" style="width:100%;height:150px;object-fit:cover;display:block;">`
+              : `<div style="height:48px;background:linear-gradient(90deg,rgba(217,59,42,0.08),rgba(240,120,40,0.06));"></div>`
+            }
+            <!-- Botões editar / apagar sobrepostos no canto -->
+            <div style="position:absolute;top:var(--space-2);right:var(--space-2);display:flex;gap:6px;">
+              <button class="btn btn-sm" title="Editar evento"
+                style="background:rgba(255,255,255,0.92);border:1px solid rgba(0,0,0,0.08);backdrop-filter:blur(4px);border-radius:var(--radius-lg);padding:6px 10px;font-size:13px;"
+                onclick="closeModal('dayDetailModal');editEvent(${evJson})">✏️ Editar</button>
+              <button class="btn btn-sm" title="Apagar evento"
+                style="background:rgba(255,255,255,0.92);border:1px solid rgba(217,59,42,0.2);backdrop-filter:blur(4px);border-radius:var(--radius-lg);padding:6px 10px;font-size:13px;color:var(--color-red);"
+                onclick="deleteEventFromCalendar('${ev.id}','${imgUrl}')">🗑</button>
+            </div>
+          </div>
           <div style="padding:var(--space-4);">
             <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:var(--space-2);margin-bottom:var(--space-2);">
               <div style="font-family:var(--font-display);font-size:var(--text-base);font-weight:600;color:var(--color-ink);">${ev.title}</div>
@@ -754,7 +771,9 @@
     // ── Oficinas recorrentes ──
     if (workshops.length) {
       html += `<div style="font-size:var(--text-xs);font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--color-muted);margin-top:var(--space-2);margin-bottom:var(--space-2);">Oficinas recorrentes (${workshops.length})</div>`;
-      html += workshops.map(w => `
+      html += workshops.map(w => {
+        const wJson = JSON.stringify(w).replace(/"/g,'&quot;');
+        return `
         <div style="background:var(--color-white);border:1px solid var(--color-border-light);border-radius:var(--radius-xl);padding:var(--space-4);box-shadow:var(--shadow-sm);display:flex;gap:var(--space-3);align-items:flex-start;">
           <div style="flex-shrink:0;width:40px;height:40px;background:rgba(217,59,42,0.08);border-radius:var(--radius-lg);display:flex;align-items:center;justify-content:center;font-size:20px;">🎨</div>
           <div style="flex:1;min-width:0;">
@@ -762,11 +781,16 @@
             <div style="display:flex;flex-wrap:wrap;gap:var(--space-2);font-size:var(--text-xs);color:var(--color-muted);">
               ${w.time ? `<span>🕐 ${w.time}${w.duration ? ' · ' + w.duration : ''}</span>` : ''}
               ${w.instructor_name ? `<span>👤 ${w.instructor_name}</span>` : ''}
-              <span>👥 ${w.enrolled || 0}/${w.capacity || '—'} inscritos</span>
+              <span>👥 ${w.enrolled||0}/${w.capacity||'—'} inscritos</span>
             </div>
           </div>
-          <span class="badge badge-oficina badge-dot" style="flex-shrink:0;">Oficina</span>
-        </div>`).join('');
+          <div style="display:flex;flex-direction:column;gap:4px;align-items:flex-end;">
+            <span class="badge badge-oficina badge-dot" style="flex-shrink:0;">Oficina</span>
+            <button class="btn btn-ghost btn-sm" style="font-size:12px;padding:4px 8px;"
+              onclick="closeModal('dayDetailModal');editWorkshop(${wJson})">✏️ Editar</button>
+          </div>
+        </div>`;
+      }).join('');
     }
 
     return html;
@@ -1042,6 +1066,7 @@
     closeModal('newEventModal');
     renderEventsTable();
     loadDashboard();
+    loadAdminCalendar(); // atualiza calendário também
   }
 
   function toggleDayLabel(cb) {
@@ -1113,6 +1138,7 @@
     document.querySelectorAll('#wsDaysGroup input[type=checkbox]').forEach(cb => { cb.checked = false; toggleDayLabel(cb); });
     closeModal('newWorkshopModal');
     renderWorkshopsTable();
+    loadAdminCalendar(); // atualiza calendário também
   }
 
   async function saveMember() {
@@ -1125,6 +1151,20 @@
     showToast(`Membro ${name} criado!`);
     closeModal('newMemberModal');
     renderMembersGrid();
+  }
+
+  async function deleteEventFromCalendar(id, imageUrl) {
+    if (!confirm('Apagar este evento? Esta ação não pode ser desfeita.')) return;
+    closeModal('dayDetailModal');
+    if (imageUrl) {
+      const path = imageUrl.split('/event-images/')[1];
+      if (path) await sb.storage.from('event-images').remove([path]);
+    }
+    await sb.from('events').delete().eq('id', id);
+    await loadAdminCalendar();   // recarrega calendário
+    renderEventsTable();
+    loadDashboard();
+    showToast('Evento removido.');
   }
 
   async function deleteEvent(id, imageUrl) {
