@@ -193,6 +193,10 @@
         <svg class="nav-icon" viewBox="0 0 20 20" fill="currentColor"><path d="M9 6a3 3 0 11-6 0 3 3 0 016 0zM17 6a3 3 0 11-6 0 3 3 0 016 0zM12.93 17c.046-.327.07-.66.07-1a6.97 6.97 0 00-1.5-4.33A5 5 0 0119 16v1h-6.07zM6 11a5 5 0 015 5v1H1v-1a5 5 0 015-5z"/></svg>
         Oficineiros
       </div>
+      <div class="nav-item" onclick="showTab('inscricoes')">
+        <svg class="nav-icon" viewBox="0 0 20 20" fill="currentColor"><path d="M9 2a1 1 0 000 2h2a1 1 0 100-2H9z"/><path fill-rule="evenodd" d="M4 5a2 2 0 012-2 3 3 0 003 3h2a3 3 0 003-3 2 2 0 012 2v11a2 2 0 01-2 2H6a2 2 0 01-2-2V5zm3 4a1 1 0 000 2h.01a1 1 0 100-2H7zm3 0a1 1 0 000 2h3a1 1 0 100-2h-3zm-3 4a1 1 0 100 2h.01a1 1 0 100-2H7zm3 0a1 1 0 100 2h3a1 1 0 100-2h-3z" clip-rule="evenodd"/></svg>
+        Inscrições
+      </div>
     </div>
 
     <div class="sidebar-footer">
@@ -228,6 +232,7 @@
           <button class="tab-btn" onclick="showTab('eventos')">Eventos</button>
           <button class="tab-btn" onclick="showTab('oficinas')">Oficinas</button>
           <button class="tab-btn" onclick="showTab('membros')">Oficineiros</button>
+          <button class="tab-btn" onclick="showTab('inscricoes')">Inscrições</button>
         </div>
       </div>
     </div>
@@ -385,6 +390,30 @@
           <button class="btn btn-primary" onclick="openNewMemberModal()">+ Novo oficineiro</button>
         </div>
         <div class="grid-3-scroll" id="membersGrid"></div>
+      </div>
+
+      <!-- ══ INSCRIÇÕES ══ -->
+      <div class="tab-panel" id="panel-inscricoes">
+        <div class="panel-toolbar" style="margin-bottom:var(--space-4);">
+          <div style="font-size:var(--text-sm);color:var(--color-muted);" id="inscricoesCount">—</div>
+          <a class="btn btn-ghost btn-sm" href="cadastro-oficineiro.html" target="_blank" style="text-decoration:none;">🔗 Abrir formulário público</a>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Nome</th>
+                <th>Nome social</th>
+                <th>WhatsApp</th>
+                <th>E-mail</th>
+                <th>Oficinas</th>
+                <th>Status</th>
+                <th></th>
+              </tr>
+            </thead>
+            <tbody id="inscricoesTable"></tbody>
+          </table>
+        </div>
       </div>
 
     </div>
@@ -644,7 +673,7 @@
   const DAY_INDEX = { 'Domingo':0,'Segunda':1,'Terça':2,'Quarta':3,'Quinta':4,'Sexta':5,'Sábado':6 };
 
   // ── Tab navigation ──
-  const titles = { dashboard: 'Dashboard', calendario: 'Calendário', eventos: 'Eventos', oficinas: 'Oficinas', membros: 'Oficineiros' };
+  const titles = { dashboard: 'Dashboard', calendario: 'Calendário', eventos: 'Eventos', oficinas: 'Oficinas', membros: 'Oficineiros', inscricoes: 'Inscrições' };
   function showTab(tab) {
     document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
     document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
@@ -662,6 +691,7 @@
     // Auto-scroll tab into view on mobile
     if (activeBtn) activeBtn.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
     if (tab === 'calendario') loadAdminCalendar();
+    if (tab === 'inscricoes') renderInscricoes();
   }
 
   // ── Admin calendar ──
@@ -1346,6 +1376,69 @@
       </div>`;
     }).join('')
     || '<div style="color:var(--color-muted);font-size:var(--text-sm);">Nenhuma oficina.</div>';
+  }
+
+  // ── Inscrições de oficineiros ──
+  async function renderInscricoes() {
+    const { data: inscricoes } = await sb.from('inscricoes_oficineiros').select('*').order('created_at', { ascending: false });
+    const { data: workshops } = await sb.from('workshops').select('id, title');
+    const ins = inscricoes || [];
+    const wsMap = Object.fromEntries((workshops || []).map(w => [w.id, w.title]));
+
+    const total = ins.length;
+    const pendentes = ins.filter(i => i.status === 'pendente').length;
+    document.getElementById('inscricoesCount').textContent =
+      total ? `${total} ficha${total !== 1 ? 's' : ''} · ${pendentes} pendente${pendentes !== 1 ? 's' : ''}` : 'Nenhuma inscrição recebida';
+
+    const STATUS_BADGE = {
+      pendente:  { cls: 'badge-apresentacao', label: '⏳ Pendente' },
+      aprovado:  { cls: 'badge-success',      label: '✅ Aprovado' },
+      recusado:  { cls: 'badge-neutral',      label: '❌ Recusado' },
+    };
+
+    document.getElementById('inscricoesTable').innerHTML = ins.length ? ins.map(i => {
+      const badge = STATUS_BADGE[i.status] || STATUS_BADGE.pendente;
+      const oficinas = (i.oficinas_ids || []).map(id => wsMap[id] || id).join(', ') || '—';
+      const whatsappLink = i.whatsapp ? `https://wa.me/55${i.whatsapp.replace(/\D/g,'')}` : '#';
+      return `<tr>
+        <td data-label="Nome"><span style="font-weight:600;">${i.nome}</span></td>
+        <td data-label="Nome social" class="m-hide" style="color:var(--color-muted);">${i.nome_social || '—'}</td>
+        <td data-label="WhatsApp">
+          <a href="${whatsappLink}" target="_blank" style="color:var(--color-red);font-weight:500;text-decoration:none;" title="Abrir WhatsApp">
+            📱 ${i.whatsapp || '—'}
+          </a>
+        </td>
+        <td data-label="E-mail" class="m-hide">
+          <a href="mailto:${i.email}" style="color:var(--color-muted);">${i.email}</a>
+        </td>
+        <td data-label="Oficinas" class="m-hide" style="color:var(--color-muted);font-size:var(--text-xs);">${oficinas}</td>
+        <td data-label="Status">
+          <select class="select" style="font-size:var(--text-xs);padding:4px 8px;width:auto;" onchange="updateInscricaoStatus('${i.id}', this.value)">
+            <option value="pendente" ${i.status==='pendente'?'selected':''}>⏳ Pendente</option>
+            <option value="aprovado" ${i.status==='aprovado'?'selected':''}>✅ Aprovado</option>
+            <option value="recusado" ${i.status==='recusado'?'selected':''}>❌ Recusado</option>
+          </select>
+        </td>
+        <td class="td-actions">
+          <button class="btn btn-ghost btn-sm btn-icon" title="Apagar inscrição" style="color:var(--color-red);" onclick="deleteInscricao('${i.id}')">🗑</button>
+        </td>
+      </tr>`;
+    }).join('')
+    : '<tr><td colspan="7" class="empty-state" style="padding:var(--space-8);">Nenhuma inscrição recebida ainda. Compartilhe o link do formulário!</td></tr>';
+  }
+
+  async function updateInscricaoStatus(id, status) {
+    const { error } = await sb.from('inscricoes_oficineiros').update({ status }).eq('id', id);
+    if (error) { showToast('Erro ao atualizar status.', 'error'); return; }
+    showToast('Status atualizado!');
+  }
+
+  async function deleteInscricao(id) {
+    if (!confirm('Apagar esta inscrição? Esta ação não pode ser desfeita.')) return;
+    const { error } = await sb.from('inscricoes_oficineiros').delete().eq('id', id);
+    if (error) { showToast('Erro ao remover inscrição.', 'error'); return; }
+    showToast('Inscrição removida.');
+    renderInscricoes();
   }
 
   async function deleteWorkshop(id) {
