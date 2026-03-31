@@ -89,6 +89,32 @@ function normalizeEvent(e) {
   return { ...e, date: new Date(e.date + 'T00:00:00') };
 }
 
+/* ── Cor por oficina ──
+   Paleta de 10 cores distintas. O hash do ID garante que
+   cada oficina sempre receba a mesma cor, em todas as telas. */
+const WS_PALETTE = [
+  { bg: '#3B82F6', light: 'rgba(59,130,246,0.18)',  dark: 'rgba(59,130,246,0.45)'  }, // azul
+  { bg: '#10B981', light: 'rgba(16,185,129,0.15)',  dark: 'rgba(16,185,129,0.40)'  }, // verde
+  { bg: '#8B5CF6', light: 'rgba(139,92,246,0.15)',  dark: 'rgba(139,92,246,0.40)'  }, // roxo
+  { bg: '#F59E0B', light: 'rgba(245,158,11,0.18)',  dark: 'rgba(245,158,11,0.38)'  }, // âmbar
+  { bg: '#EC4899', light: 'rgba(236,72,153,0.15)',  dark: 'rgba(236,72,153,0.40)'  }, // rosa
+  { bg: '#06B6D4', light: 'rgba(6,182,212,0.15)',   dark: 'rgba(6,182,212,0.40)'   }, // ciano
+  { bg: '#84CC16', light: 'rgba(132,204,22,0.15)',  dark: 'rgba(132,204,22,0.38)'  }, // verde-limão
+  { bg: '#F97316', light: 'rgba(249,115,22,0.18)',  dark: 'rgba(249,115,22,0.42)'  }, // laranja
+  { bg: '#6366F1', light: 'rgba(99,102,241,0.15)',  dark: 'rgba(99,102,241,0.40)'  }, // índigo
+  { bg: '#14B8A6', light: 'rgba(20,184,166,0.15)',  dark: 'rgba(20,184,166,0.38)'  }, // teal
+];
+
+function wsColorIndex(id) {
+  let hash = 0;
+  for (let i = 0; i < (id || '').length; i++)
+    hash = ((hash << 5) - hash) + (id || '').charCodeAt(i);
+  return Math.abs(hash) % WS_PALETTE.length;
+}
+
+/* Retorna o objeto { bg, light, dark } para uma oficina pelo seu ID */
+function wsColor(id) { return WS_PALETTE[wsColorIndex(id)]; }
+
 /* ── Toast / Modal helpers ── */
 function showToast(msg, type = 'success') {
   const container = document.getElementById('toastContainer');

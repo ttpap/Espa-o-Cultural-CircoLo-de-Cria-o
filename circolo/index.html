@@ -723,7 +723,15 @@
       dots.className = 'cal-dots';
       all.slice(0,3).forEach(ev => {
         const p = document.createElement('div');
-        p.className = `cal-dot-pill ${ev.type}`;
+        // Oficinas recebem cor individual; eventos usam classe por tipo
+        if (ev.day_of_week !== undefined) {
+          const c = wsColor(ev.id);
+          p.className = 'cal-dot-pill';
+          p.style.background = c.dark;
+          p.style.color = '#fff';
+        } else {
+          p.className = `cal-dot-pill ${ev.type}`;
+        }
         p.textContent = ev.title;
         dots.appendChild(p);
       });
@@ -800,9 +808,10 @@
 
   function wsSideCardHTML(w) {
     const timeStr = w.time ? w.time + (w.duration ? ' · '+w.duration : '') : '';
+    const c = wsColor(w.id);
     return `
-      <div class="ws-side-card">
-        <div class="ws-side-icon">🎨</div>
+      <div class="ws-side-card" style="border-color:${c.bg}33;background:${c.dark};">
+        <div class="ws-side-icon" style="background:${c.dark};border:1.5px solid ${c.bg}55;">🎨</div>
         <div class="ws-side-info">
           <div class="ws-side-title">${w.title}</div>
           <div class="ws-side-meta">
@@ -810,6 +819,7 @@
             ${w.instructor_name ? ` · 👤 ${w.instructor_name}` : ''}
           </div>
         </div>
+        <div style="width:8px;height:8px;border-radius:50%;background:${c.bg};flex-shrink:0;"></div>
       </div>`;
   }
 

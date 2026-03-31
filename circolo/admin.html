@@ -827,7 +827,19 @@
       cell.className = 'calendar-day admin-calendar-day' + (isOther ? ' other-month' : '') + (isToday ? ' today' : '') + (isSelected ? ' selected' : '');
       const num = document.createElement('div'); num.className = 'day-num'; num.textContent = day;
       const evC = document.createElement('div'); evC.className = 'day-events';
-      allItems.slice(0, 2).forEach(ev => { const d = document.createElement('div'); d.className = `day-event-dot ${ev.type}`; d.textContent = ev.title.slice(0, 20); evC.appendChild(d); });
+      allItems.slice(0, 2).forEach(ev => {
+        const d = document.createElement('div');
+        d.className = `day-event-dot ${ev.type}`;
+        d.textContent = ev.title.slice(0, 20);
+        // Cor individual por oficina
+        if (ev.day_of_week !== undefined) {
+          const c = wsColor(ev.id);
+          d.style.background = c.light;
+          d.style.color = c.bg;
+          d.style.fontWeight = '600';
+        }
+        evC.appendChild(d);
+      });
       if (allItems.length > 2) { const more = document.createElement('div'); more.className = 'day-event-dot'; more.style.background = 'var(--color-subtle)'; more.textContent = `+${allItems.length - 2}`; evC.appendChild(more); }
       cell.appendChild(num); cell.appendChild(evC);
       if (!isOther) cell.addEventListener('click', () => selectAdminDay(date));
@@ -901,9 +913,10 @@
       html += `<div style="font-size:var(--text-xs);font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--color-muted);margin-top:var(--space-2);margin-bottom:var(--space-2);">Oficinas recorrentes (${workshops.length})</div>`;
       html += workshops.map(w => {
         const wJson = JSON.stringify(w).replace(/"/g,'&quot;');
+        const wc = wsColor(w.id);
         return `
         <div style="background:var(--color-white);border:1px solid var(--color-border-light);border-radius:var(--radius-xl);padding:var(--space-4);box-shadow:var(--shadow-sm);display:flex;gap:var(--space-3);align-items:flex-start;">
-          <div style="flex-shrink:0;width:40px;height:40px;background:rgba(217,59,42,0.08);border-radius:var(--radius-lg);display:flex;align-items:center;justify-content:center;font-size:20px;">🎨</div>
+          <div style="flex-shrink:0;width:40px;height:40px;background:${wc.light};border-radius:var(--radius-lg);display:flex;align-items:center;justify-content:center;font-size:20px;border:1.5px solid ${wc.bg}33;">🎨</div>
           <div style="flex:1;min-width:0;">
             <div style="font-weight:600;font-size:var(--text-sm);color:var(--color-ink);margin-bottom:4px;">${w.title}</div>
             <div style="display:flex;flex-wrap:wrap;gap:var(--space-2);font-size:var(--text-xs);color:var(--color-muted);">
@@ -1082,8 +1095,14 @@
     const ws = data || [];
     document.getElementById('workshopsTable').innerHTML = ws.length ? ws.map(w => {
       const pct = Math.round((w.enrolled||0) / (w.capacity||1) * 100);
+      const wc = wsColor(w.id);
       return `<tr>
-        <td data-label="Oficina"><span style="font-weight:600;">${w.title}</span></td>
+        <td data-label="Oficina">
+          <div style="display:flex;align-items:center;gap:var(--space-2);">
+            <span style="width:10px;height:10px;border-radius:50%;background:${wc.bg};flex-shrink:0;display:inline-block;"></span>
+            <span style="font-weight:600;">${w.title}</span>
+          </div>
+        </td>
         <td data-label="Oficineiro" class="m-hide">${w.instructor_name || '—'}</td>
         <td data-label="Dia">${w.day_of_week}</td>
         <td data-label="Horário">${w.time || '—'}</td>
