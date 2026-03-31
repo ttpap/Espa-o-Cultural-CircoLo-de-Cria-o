@@ -1206,23 +1206,37 @@
   async function approveInscricao(ins) {
     const btn = event.currentTarget;
     btn.disabled = true; btn.textContent = '⏳ Aprovando…';
-    // Gera senha provisória
     const tempPass = Math.random().toString(36).slice(2, 10);
-    const initials = (ins.nome || '').split(' ').map(p => p[0]).filter(Boolean).slice(0, 2).join('').toUpperCase();
-    // Cria conta auth
-    const { error: signUpErr } = await sb.auth.signUp({
-      email: ins.email,
-      password: tempPass,
-      options: { data: { name: ins.nome, nome_social: ins.nome_social || null, whatsapp: ins.whatsapp, role: 'member', initials } }
+
+    // Usa Edge Function para criar o usuário sem afetar a sessão do admin
+    const { data: { session } } = await sb.auth.getSession();
+    const resp = await fetch(`${SUPABASE_URL}/functions/v1/create-oficineiro`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${session.access_token}`,
+        'apikey': SUPABASE_ANON,
+      },
+      body: JSON.stringify({
+        email:       ins.email,
+        password:    tempPass,
+        name:        ins.nome,
+        nome_social: ins.nome_social || null,
+        whatsapp:    ins.whatsapp   || null,
+        foto_url:    ins.foto_url   || null,
+      }),
     });
-    if (signUpErr) {
-      showToast('Erro ao criar conta: ' + signUpErr.message, 'error');
+
+    const result = await resp.json();
+    if (!resp.ok || result.error) {
+      showToast('Erro ao criar conta: ' + (result.error || 'Falha'), 'error');
       btn.disabled = false; btn.textContent = '✅ Aprovar';
       return;
     }
+
     // Marca inscrição como aprovada
     await sb.from('inscricoes_oficineiros').update({ status: 'aprovado' }).eq('id', ins.id);
-    showToast(`${ins.nome} aprovado(a) como oficineiro! Senha provisória: ${tempPass}`);
+    showToast(`${ins.nome} aprovado(a)! Senha provisória: ${tempPass}`);
     renderMembersGrid();
     loadDashboard();
   }
@@ -1511,11 +1525,18 @@
       }
     }
 
-    const initials = name.split(' ').map(p=>p[0]).filter(Boolean).slice(0,2).join('').toUpperCase();
-    const { error } = await sb.auth.signUp({
-      email,
-      password: pass,
-      options: { data: {
+    // Usa Edge Function para criar o usuário sem afetar a sessão do admin
+    const { data: { session } } = await sb.auth.getSession();
+    const resp = await fetch(`${SUPABASE_URL}/functions/v1/create-oficineiro`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${session.access_token}`,
+        'apikey': SUPABASE_ANON,
+      },
+      body: JSON.stringify({
+        email,
+        password: pass,
         name,
         nome_social:     document.getElementById('memNomeSocial').value.trim() || null,
         whatsapp:        document.getElementById('memWhats').value.trim() || null,
@@ -1524,13 +1545,17 @@
         data_nascimento: document.getElementById('memNasc').value || null,
         cpf:             document.getElementById('memCPF').value.replace(/\D/g,'') || null,
         foto_url,
-        role: 'member',
-        initials,
-      }}
+      }),
     });
 
+    const result = await resp.json();
     btn.disabled = false; btn.textContent = 'Criar oficineiro ✓';
-    if (error) { showToast('Erro: ' + error.message, 'error'); return; }
+
+    if (!resp.ok || result.error) {
+      showToast('Erro: ' + (result.error || 'Falha ao criar oficineiro.'), 'error');
+      return;
+    }
+
     showToast(`Oficineiro ${name} criado com sucesso!`);
     closeModal('newMemberModal');
     renderMembersGrid();
