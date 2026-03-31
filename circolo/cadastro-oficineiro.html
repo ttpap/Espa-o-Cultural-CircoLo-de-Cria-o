@@ -3,499 +3,697 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Ficha de Cadastro — Oficineiro · CircoLo</title>
+  <title>Cadastro de Oficineiro — CircoLo</title>
   <link rel="stylesheet" href="css/style.css">
   <style>
-    /* ── Page layout ── */
-    body { background: var(--color-warm-white); min-height: 100vh; }
 
-    .cadastro-page {
+    body { background: #13100F; min-height: 100vh; }
+
+    /* ── PAGE WRAPPER ── */
+    .cad-page {
       min-height: 100vh;
       display: flex;
       flex-direction: column;
+      align-items: center;
+      justify-content: flex-start;
     }
 
-    /* ── Hero topo ── */
-    .cadastro-hero {
-      background: linear-gradient(135deg, var(--color-red-dark) 0%, var(--color-red) 50%, var(--color-orange) 100%);
-      padding: var(--space-10) var(--space-6) var(--space-8);
+    /* ── TOPO com gradiente ── */
+    .cad-top {
+      width: 100%;
+      background: linear-gradient(135deg, #1C1714 0%, #2A1810 50%, #1C1714 100%);
+      border-bottom: 1px solid rgba(255,255,255,0.07);
+      padding: var(--space-8) var(--space-6) var(--space-6);
       text-align: center;
-      color: var(--color-white);
-      position: relative;
+    }
+    .cad-logo-wrap {
+      width: 64px; height: 64px;
+      border-radius: var(--radius-xl);
       overflow: hidden;
+      margin: 0 auto var(--space-4);
+      border: 2px solid rgba(255,255,255,0.1);
+      box-shadow: 0 8px 32px rgba(0,0,0,0.4);
     }
-    .cadastro-hero::before {
-      content: '';
-      position: absolute;
-      inset: 0;
-      background: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.04'%3E%3Ccircle cx='30' cy='30' r='20'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
-      pointer-events: none;
+    .cad-logo-wrap img { width: 100%; height: 100%; object-fit: cover; }
+    .cad-top-eyebrow {
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: rgba(255,255,255,0.35);
+      margin-bottom: var(--space-2);
     }
-    .hero-logo {
-      width: 72px;
-      height: 72px;
-      border-radius: var(--radius-2xl);
-      background: rgba(255,255,255,0.15);
-      backdrop-filter: blur(8px);
-      border: 2px solid rgba(255,255,255,0.25);
+    .cad-top-title {
+      font-family: var(--font-display);
+      font-size: clamp(1.4rem, 4vw, 2rem);
+      font-weight: var(--weight-bold);
+      background: var(--gradient-brand);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      line-height: 1.2;
+      margin-bottom: var(--space-2);
+    }
+    .cad-top-sub {
+      font-size: var(--text-sm);
+      color: rgba(255,255,255,0.4);
+      max-width: 380px;
+      margin: 0 auto;
+      line-height: 1.6;
+    }
+
+    /* ── STEPPER ── */
+    .stepper {
       display: flex;
       align-items: center;
       justify-content: center;
-      margin: 0 auto var(--space-5);
-      overflow: hidden;
+      gap: 0;
+      margin-top: var(--space-6);
     }
-    .hero-logo img { width: 100%; height: 100%; object-fit: cover; }
-    .hero-eyebrow {
-      font-size: var(--text-xs);
-      font-weight: var(--weight-semibold);
-      letter-spacing: var(--tracking-widest);
-      text-transform: uppercase;
-      color: rgba(255,255,255,0.7);
-      margin-bottom: var(--space-3);
+    .step-item {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: var(--space-2);
+      position: relative;
     }
-    .hero-title {
-      font-family: var(--font-display);
-      font-size: clamp(1.6rem, 5vw, 2.4rem);
-      font-weight: var(--weight-bold);
-      line-height: 1.15;
-      margin-bottom: var(--space-3);
-    }
-    .hero-subtitle {
+    .step-circle {
+      width: 36px; height: 36px;
+      border-radius: 50%;
+      border: 2px solid rgba(255,255,255,0.15);
+      background: rgba(255,255,255,0.05);
+      display: flex; align-items: center; justify-content: center;
       font-size: var(--text-sm);
-      color: rgba(255,255,255,0.8);
-      max-width: 420px;
-      margin: 0 auto;
-      line-height: var(--leading-relaxed);
+      font-weight: 700;
+      color: rgba(255,255,255,0.3);
+      transition: all 0.3s ease;
+      position: relative;
+      z-index: 1;
     }
+    .step-item.active .step-circle {
+      border-color: var(--color-red);
+      background: var(--color-red);
+      color: #fff;
+      box-shadow: 0 0 0 4px rgba(217,59,42,0.2);
+    }
+    .step-item.done .step-circle {
+      border-color: #16a34a;
+      background: #16a34a;
+      color: #fff;
+    }
+    .step-label {
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: 0.06em;
+      color: rgba(255,255,255,0.25);
+      white-space: nowrap;
+      transition: color 0.3s;
+    }
+    .step-item.active .step-label { color: rgba(255,255,255,0.8); }
+    .step-item.done  .step-label  { color: rgba(255,255,255,0.45); }
 
-    /* ── Form card ── */
-    .cadastro-body {
-      flex: 1;
-      padding: var(--space-8) var(--space-4) var(--space-10);
-      max-width: 640px;
+    .step-line {
+      width: 80px; height: 2px;
+      background: rgba(255,255,255,0.08);
+      margin-bottom: 20px;
+      position: relative;
+      transition: background 0.3s;
+    }
+    .step-line.done { background: #16a34a; }
+
+    /* ── FORM CARD ── */
+    .cad-body {
       width: 100%;
-      margin: 0 auto;
+      max-width: 560px;
+      padding: var(--space-6) var(--space-4) var(--space-12);
     }
 
     .form-card {
-      background: var(--color-white);
+      background: #1C1714;
       border-radius: var(--radius-2xl);
-      padding: var(--space-8);
-      border: 1px solid var(--color-border-light);
-      box-shadow: var(--shadow-lg);
+      border: 1px solid rgba(255,255,255,0.08);
+      box-shadow: 0 24px 64px rgba(0,0,0,0.4);
+      overflow: hidden;
     }
 
-    .section-label {
-      font-size: var(--text-xs);
-      font-weight: var(--weight-semibold);
-      letter-spacing: var(--tracking-widest);
-      text-transform: uppercase;
-      color: var(--color-muted);
-      margin-bottom: var(--space-4);
-      padding-bottom: var(--space-2);
-      border-bottom: 1px solid var(--color-border-light);
+    /* Etapas */
+    .step-panel {
+      display: none;
+      padding: var(--space-7) var(--space-7) var(--space-6);
+      animation: fadeInUp 0.3s var(--ease-out);
+    }
+    .step-panel.active { display: block; }
+
+    @keyframes fadeInUp {
+      from { opacity: 0; transform: translateY(12px); }
+      to   { opacity: 1; transform: translateY(0); }
     }
 
-    .field { display: flex; flex-direction: column; gap: var(--space-2); margin-bottom: var(--space-5); }
-    .field:last-child { margin-bottom: 0; }
-    .field label { font-size: var(--text-sm); font-weight: var(--weight-medium); color: var(--color-ink); }
-    .field .hint { font-size: var(--text-xs); color: var(--color-muted); }
-    .required { color: var(--color-red); margin-left: 2px; }
-
-    .input, .select {
-      width: 100%;
-      padding: var(--space-3) var(--space-4);
-      border: 1.5px solid var(--color-border);
-      border-radius: var(--radius-lg);
+    .step-panel-title {
+      font-family: var(--font-display);
+      font-size: var(--text-xl);
+      font-weight: var(--weight-bold);
+      color: rgba(255,255,255,0.92);
+      margin-bottom: var(--space-1);
+    }
+    .step-panel-sub {
       font-size: var(--text-sm);
-      color: var(--color-ink);
-      background: var(--color-white);
-      transition: border-color var(--duration-fast), box-shadow var(--duration-fast);
+      color: rgba(255,255,255,0.35);
+      margin-bottom: var(--space-6);
+    }
+
+    /* ── Campos ── */
+    .field { margin-bottom: var(--space-5); }
+    .field:last-of-type { margin-bottom: 0; }
+    .field label {
+      display: block;
+      font-size: var(--text-xs);
+      font-weight: 600;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: rgba(255,255,255,0.45);
+      margin-bottom: var(--space-2);
+    }
+    .field .req { color: var(--color-red); margin-left: 2px; }
+    .field .hint { font-size: 11px; color: rgba(255,255,255,0.25); margin-top: var(--space-2); }
+
+    .inp {
+      width: 100%;
+      background: rgba(255,255,255,0.05);
+      border: 1.5px solid rgba(255,255,255,0.1);
+      border-radius: var(--radius-lg);
+      padding: var(--space-3) var(--space-4);
+      font-size: var(--text-sm);
+      color: rgba(255,255,255,0.88);
       outline: none;
+      transition: border-color 0.2s, box-shadow 0.2s, background 0.2s;
     }
-    .input:focus, .select:focus {
-      border-color: var(--color-red);
-      box-shadow: 0 0 0 3px rgba(217,59,42,0.1);
+    .inp::placeholder { color: rgba(255,255,255,0.2); }
+    .inp:focus {
+      border-color: rgba(217,59,42,0.6);
+      background: rgba(255,255,255,0.07);
+      box-shadow: 0 0 0 3px rgba(217,59,42,0.12);
     }
-    .input::placeholder { color: var(--color-subtle); }
-    .input.error, .select.error { border-color: var(--color-red); }
+    .inp.error { border-color: rgba(217,59,42,0.7) !important; }
+    .inp-prefix-wrap {
+      position: relative;
+    }
+    .inp-prefix {
+      position: absolute;
+      left: var(--space-4);
+      top: 50%;
+      transform: translateY(-50%);
+      font-size: var(--text-sm);
+      color: rgba(255,255,255,0.3);
+      pointer-events: none;
+    }
+    .inp-prefix-wrap .inp { padding-left: 2.4rem; }
 
     .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-4); }
 
-    /* ── Workshop picker ── */
-    .workshop-grid {
-      display: flex;
-      flex-direction: column;
-      gap: var(--space-2);
-    }
-
-    .workshop-option {
+    /* ── Upload de foto ── */
+    .photo-upload-wrap {
       display: flex;
       align-items: center;
-      gap: var(--space-3);
-      padding: var(--space-3) var(--space-4);
-      border: 1.5px solid var(--color-border);
-      border-radius: var(--radius-xl);
-      cursor: pointer;
-      transition: all var(--duration-fast) var(--ease-out);
-      user-select: none;
-      background: var(--color-white);
+      gap: var(--space-5);
+      margin-bottom: var(--space-6);
     }
-    .workshop-option:hover {
-      border-color: var(--color-red);
-      background: rgba(217,59,42,0.03);
-    }
-    .workshop-option.selected {
-      border-color: var(--color-red);
-      background: rgba(217,59,42,0.06);
-    }
-    .workshop-option input[type="checkbox"] { display: none; }
-    .ws-check {
-      width: 20px;
-      height: 20px;
-      border: 2px solid var(--color-border);
-      border-radius: 6px;
-      flex-shrink: 0;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      transition: all var(--duration-fast);
-      background: var(--color-white);
-    }
-    .workshop-option.selected .ws-check {
-      border-color: var(--color-red);
-      background: var(--color-red);
-    }
-    .ws-check-icon {
-      display: none;
-      color: white;
-      font-size: 12px;
-      line-height: 1;
-    }
-    .workshop-option.selected .ws-check-icon { display: block; }
-
-    .ws-info { flex: 1; min-width: 0; }
-    .ws-title { font-size: var(--text-sm); font-weight: var(--weight-semibold); color: var(--color-ink); }
-    .ws-meta { font-size: var(--text-xs); color: var(--color-muted); margin-top: 2px; }
-
-    .ws-loading {
-      text-align: center;
-      padding: var(--space-6);
-      color: var(--color-muted);
-      font-size: var(--text-sm);
-    }
-
-    /* ── Divider ── */
-    .form-divider { border: none; border-top: 1px solid var(--color-border-light); margin: var(--space-7) 0; }
-
-    /* ── Submit ── */
-    .btn-submit {
-      width: 100%;
-      padding: var(--space-4) var(--space-6);
-      background: linear-gradient(135deg, var(--color-red) 0%, var(--color-orange) 100%);
-      color: white;
-      border: none;
-      border-radius: var(--radius-full);
-      font-size: var(--text-base);
-      font-weight: var(--weight-semibold);
-      letter-spacing: var(--tracking-wide);
-      cursor: pointer;
-      transition: all var(--duration-base) var(--ease-out);
-      box-shadow: 0 4px 16px rgba(217,59,42,0.35);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: var(--space-2);
-    }
-    .btn-submit:hover:not(:disabled) {
-      transform: translateY(-1px);
-      box-shadow: 0 8px 24px rgba(217,59,42,0.45);
-    }
-    .btn-submit:active:not(:disabled) { transform: translateY(0); }
-    .btn-submit:disabled {
-      opacity: 0.65;
-      cursor: not-allowed;
-      transform: none;
-      box-shadow: none;
-    }
-
-    /* ── Sucesso ── */
-    .success-state {
-      display: none;
-      text-align: center;
-      padding: var(--space-10) var(--space-6);
-    }
-    .success-state.show { display: block; }
-    .success-icon {
-      width: 80px;
-      height: 80px;
-      background: linear-gradient(135deg, #22c55e, #16a34a);
+    .photo-preview {
+      width: 80px; height: 80px;
       border-radius: 50%;
+      background: rgba(255,255,255,0.07);
+      border: 2px dashed rgba(255,255,255,0.15);
+      display: flex; align-items: center; justify-content: center;
+      overflow: hidden;
+      flex-shrink: 0;
+      cursor: pointer;
+      transition: border-color 0.2s, background 0.2s;
+      position: relative;
+    }
+    .photo-preview:hover { border-color: var(--color-red); background: rgba(217,59,42,0.08); }
+    .photo-preview img {
+      width: 100%; height: 100%;
+      object-fit: cover;
+      display: none;
+      border-radius: 50%;
+    }
+    .photo-placeholder { font-size: 28px; color: rgba(255,255,255,0.2); }
+    .photo-info {}
+    .photo-info-title { font-size: var(--text-sm); font-weight: 600; color: rgba(255,255,255,0.7); margin-bottom: 4px; }
+    .photo-info-sub { font-size: 11px; color: rgba(255,255,255,0.3); line-height: 1.5; }
+    .photo-btn {
+      margin-top: var(--space-2);
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--color-orange);
+      background: none;
+      border: none;
+      cursor: pointer;
+      padding: 0;
+      letter-spacing: 0.04em;
+    }
+    .photo-btn:hover { color: var(--color-red); }
+
+    /* ── Divisor ── */
+    .form-divider {
+      border: none;
+      border-top: 1px solid rgba(255,255,255,0.07);
+      margin: var(--space-6) calc(-1 * var(--space-7));
+    }
+
+    /* ── Rodapé do card (navegação) ── */
+    .card-footer {
+      padding: var(--space-5) var(--space-7);
+      border-top: 1px solid rgba(255,255,255,0.07);
       display: flex;
       align-items: center;
-      justify-content: center;
+      justify-content: space-between;
+      gap: var(--space-3);
+    }
+    .btn-back {
+      padding: var(--space-3) var(--space-5);
+      border-radius: var(--radius-full);
+      font-size: var(--text-sm);
+      font-weight: 600;
+      color: rgba(255,255,255,0.4);
+      background: none;
+      border: 1.5px solid rgba(255,255,255,0.1);
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .btn-back:hover { color: rgba(255,255,255,0.8); border-color: rgba(255,255,255,0.2); }
+    .btn-next {
+      padding: var(--space-3) var(--space-8);
+      border-radius: var(--radius-full);
+      font-size: var(--text-sm);
+      font-weight: 700;
+      color: #fff;
+      background: linear-gradient(135deg, var(--color-red), var(--color-orange));
+      border: none;
+      cursor: pointer;
+      letter-spacing: 0.04em;
+      box-shadow: 0 4px 16px rgba(217,59,42,0.35);
+      transition: all 0.2s;
+      display: flex; align-items: center; gap: var(--space-2);
+    }
+    .btn-next:hover:not(:disabled) { transform: translateY(-1px); box-shadow: 0 8px 24px rgba(217,59,42,0.45); }
+    .btn-next:disabled { opacity: 0.5; cursor: not-allowed; transform: none; box-shadow: none; }
+
+    /* ── Tela de sucesso ── */
+    .success-screen {
+      display: none;
+      text-align: center;
+      padding: var(--space-10) var(--space-8);
+    }
+    .success-screen.show { display: block; }
+    .success-anim {
+      width: 80px; height: 80px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, #16a34a, #22c55e);
+      display: flex; align-items: center; justify-content: center;
       font-size: 36px;
       margin: 0 auto var(--space-6);
-      box-shadow: 0 8px 24px rgba(34,197,94,0.35);
+      box-shadow: 0 8px 32px rgba(34,197,94,0.3);
     }
     .success-title {
       font-family: var(--font-display);
       font-size: var(--text-2xl);
-      font-weight: var(--weight-bold);
-      color: var(--color-ink);
+      font-weight: 700;
+      color: rgba(255,255,255,0.92);
       margin-bottom: var(--space-3);
     }
     .success-msg {
       font-size: var(--text-sm);
-      color: var(--color-muted);
-      line-height: var(--leading-relaxed);
+      color: rgba(255,255,255,0.4);
+      line-height: 1.7;
       max-width: 340px;
-      margin: 0 auto var(--space-6);
+      margin: 0 auto var(--space-8);
     }
+    .btn-novo {
+      padding: var(--space-3) var(--space-7);
+      border-radius: var(--radius-full);
+      font-size: var(--text-sm);
+      font-weight: 700;
+      color: rgba(255,255,255,0.6);
+      background: rgba(255,255,255,0.07);
+      border: 1.5px solid rgba(255,255,255,0.12);
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .btn-novo:hover { color: #fff; background: rgba(255,255,255,0.12); }
 
-    /* ── Footer ── */
-    .cadastro-footer {
+    /* ── Footer da página ── */
+    .page-footer {
       text-align: center;
       padding: var(--space-6);
-      font-size: var(--text-xs);
-      color: var(--color-muted);
-      border-top: 1px solid var(--color-border-light);
+      font-size: 11px;
+      color: rgba(255,255,255,0.18);
+      letter-spacing: 0.04em;
     }
 
     /* ── Toast ── */
     .toast-container { position: fixed; bottom: var(--space-5); right: var(--space-5); z-index: 9999; display: flex; flex-direction: column; gap: var(--space-2); }
-    .toast { background: var(--color-charcoal); color: white; padding: var(--space-3) var(--space-5); border-radius: var(--radius-xl); font-size: var(--text-sm); box-shadow: var(--shadow-lg); }
-    .toast.error { background: var(--color-red); }
-    .toast.success { background: #16a34a; }
+    .toast { background: #2A2420; color: rgba(255,255,255,0.9); padding: var(--space-3) var(--space-5); border-radius: var(--radius-xl); font-size: var(--text-sm); box-shadow: 0 8px 32px rgba(0,0,0,0.4); border: 1px solid rgba(255,255,255,0.08); }
+    .toast.error { background: rgba(217,59,42,0.9); border-color: transparent; }
+    .toast.success { background: rgba(22,163,74,0.9); border-color: transparent; }
 
     /* ── Mobile ── */
     @media (max-width: 600px) {
-      .cadastro-hero { padding: var(--space-8) var(--space-5) var(--space-6); }
-      .form-card { padding: var(--space-5); border-radius: var(--radius-xl); box-shadow: none; border: none; background: transparent; }
-      .cadastro-body { padding: var(--space-4) var(--space-2) var(--space-10); }
+      .step-panel { padding: var(--space-5) var(--space-5) var(--space-4); }
+      .card-footer { padding: var(--space-4) var(--space-5); }
       .form-row { grid-template-columns: 1fr; }
+      .form-divider { margin: var(--space-5) calc(-1 * var(--space-5)); }
+      .step-line { width: 48px; }
     }
   </style>
 </head>
 <body>
-<div class="cadastro-page">
+<div class="cad-page">
 
-  <!-- ── Hero ── -->
-  <div class="cadastro-hero">
-    <div class="hero-logo">
+  <!-- ── TOPO ── -->
+  <div class="cad-top">
+    <div class="cad-logo-wrap">
       <img src="assets/logo.jpeg" alt="CircoLo">
     </div>
-    <div class="hero-eyebrow">Espaço Cultural CircoLo de Criação</div>
-    <h1 class="hero-title">Ficha de Cadastro<br>de Oficineiros</h1>
-    <p class="hero-subtitle">Preencha os dados abaixo para fazer parte da nossa equipe de oficineiros. Sua inscrição será analisada pela coordenação.</p>
+    <div class="cad-top-eyebrow">Espaço Cultural CircoLo de Criação</div>
+    <h1 class="cad-top-title">Cadastro de Oficineiro</h1>
+    <p class="cad-top-sub">Faça parte do nosso time. Preencha os dados abaixo para enviar sua ficha.</p>
+
+    <!-- Stepper -->
+    <div class="stepper" id="stepper">
+      <div class="step-item active" id="step-ind-1">
+        <div class="step-circle">1</div>
+        <div class="step-label">Dados pessoais</div>
+      </div>
+      <div class="step-line" id="step-line-1"></div>
+      <div class="step-item" id="step-ind-2">
+        <div class="step-circle">2</div>
+        <div class="step-label">Contato</div>
+      </div>
+    </div>
   </div>
 
-  <!-- ── Form ── -->
-  <div class="cadastro-body">
+  <!-- ── BODY ── -->
+  <div class="cad-body">
     <div class="form-card" id="formCard">
 
-      <!-- Dados pessoais -->
-      <div class="section-label">📋 Dados pessoais</div>
+      <!-- ════ ETAPA 1 — Dados Pessoais ════ -->
+      <div class="step-panel active" id="panel-1">
+        <div class="step-panel-title">Dados pessoais</div>
+        <div class="step-panel-sub">Conte um pouco sobre você.</div>
 
-      <div class="field">
-        <label>Nome completo <span class="required">*</span></label>
-        <input class="input" id="fNome" type="text" placeholder="Ex.: Fernanda Lima" autocomplete="name">
-      </div>
-
-      <div class="field">
-        <label>Nome social</label>
-        <input class="input" id="fNomeSocial" type="text" placeholder="Se preferir ser chamada(o) de outro nome">
-        <span class="hint">Opcional — informe se quiser ser identificado(a) por um nome diferente.</span>
-      </div>
-
-      <div class="form-row">
-        <div class="field" style="margin-bottom:0;">
-          <label>WhatsApp <span class="required">*</span></label>
-          <input class="input" id="fWhatsapp" type="tel" placeholder="(00) 00000-0000" autocomplete="tel">
+        <!-- Foto de perfil -->
+        <div class="photo-upload-wrap">
+          <div class="photo-preview" id="photoPreviewBtn" onclick="document.getElementById('photoInput').click()" title="Clique para enviar foto">
+            <img id="photoPreviewImg" alt="Foto de perfil">
+            <span class="photo-placeholder" id="photoPlaceholder">🧑‍🎨</span>
+          </div>
+          <div class="photo-info">
+            <div class="photo-info-title">Foto de perfil</div>
+            <div class="photo-info-sub">JPG ou PNG · máx. 3 MB<br>Opcional, mas recomendada</div>
+            <button class="photo-btn" onclick="document.getElementById('photoInput').click()">📷 Escolher foto</button>
+            <button class="photo-btn" id="removePhotoBtn" style="display:none;color:rgba(255,255,255,0.3);margin-left:var(--space-3);" onclick="removePhoto()">✕ Remover</button>
+          </div>
+          <input type="file" id="photoInput" accept="image/*" style="display:none;" onchange="previewPhoto(this)">
         </div>
-        <div class="field" style="margin-bottom:0;">
-          <label>E-mail <span class="required">*</span></label>
-          <input class="input" id="fEmail" type="email" placeholder="seu@email.com" autocomplete="email">
+
+        <hr class="form-divider">
+
+        <div class="field" style="margin-top:var(--space-6);">
+          <label>Nome completo <span class="req">*</span></label>
+          <input class="inp" id="f1Nome" type="text" placeholder="Ex.: Fernanda Lima" autocomplete="name">
+        </div>
+
+        <div class="field">
+          <label>Nome social</label>
+          <input class="inp" id="f1NomeSocial" type="text" placeholder="Como prefere ser chamado(a)">
+          <span class="hint">Opcional — preencha se quiser ser identificado(a) por outro nome.</span>
+        </div>
+
+        <div class="form-row">
+          <div class="field" style="margin-bottom:0;">
+            <label>Data de nascimento <span class="req">*</span></label>
+            <input class="inp" id="f1Nasc" type="date">
+          </div>
+          <div class="field" style="margin-bottom:0;">
+            <label>CPF</label>
+            <input class="inp" id="f1CPF" type="text" placeholder="000.000.000-00" maxlength="14">
+            <span class="hint">Opcional</span>
+          </div>
         </div>
       </div>
 
-      <hr class="form-divider">
+      <!-- ════ ETAPA 2 — Contato ════ -->
+      <div class="step-panel" id="panel-2">
+        <div class="step-panel-title">Contato</div>
+        <div class="step-panel-sub">Como podemos falar com você?</div>
 
-      <!-- Oficinas -->
-      <div class="section-label">🎨 Oficinas que irá ministrar</div>
-      <div class="field">
-        <label>Selecione uma ou mais oficinas <span class="required">*</span></label>
-        <span class="hint" style="margin-bottom:var(--space-3);">Marque todas as oficinas das quais você será responsável.</span>
-        <div class="workshop-grid" id="workshopGrid">
-          <div class="ws-loading">⏳ Carregando oficinas…</div>
+        <div class="field">
+          <label>E-mail <span class="req">*</span></label>
+          <input class="inp" id="f2Email" type="email" placeholder="seu@email.com" autocomplete="email">
+        </div>
+
+        <div class="field">
+          <label>WhatsApp <span class="req">*</span></label>
+          <input class="inp" id="f2Whats" type="tel" placeholder="(00) 00000-0000" autocomplete="tel">
+        </div>
+
+        <div class="field">
+          <label>Instagram</label>
+          <div class="inp-prefix-wrap">
+            <span class="inp-prefix">@</span>
+            <input class="inp" id="f2Insta" type="text" placeholder="seuusuario">
+          </div>
+          <span class="hint">Opcional — sem o @</span>
+        </div>
+
+        <div class="field">
+          <label>Portfólio / site / link</label>
+          <input class="inp" id="f2Link" type="url" placeholder="https://...">
+          <span class="hint">Opcional</span>
         </div>
       </div>
 
-      <hr class="form-divider" style="margin-bottom:var(--space-6);">
+      <!-- Rodapé de navegação -->
+      <div class="card-footer" id="cardFooter">
+        <button class="btn-back" id="btnBack" style="visibility:hidden;" onclick="goBack()">← Voltar</button>
+        <button class="btn-next" id="btnNext" onclick="goNext()">
+          <span id="btnNextText">Continuar</span>
+          <span>→</span>
+        </button>
+      </div>
 
-      <button class="btn-submit" id="submitBtn" onclick="submitForm()">
-        <span id="submitText">✅ Enviar ficha de cadastro</span>
-      </button>
+    </div><!-- /form-card -->
 
+    <!-- ── SUCESSO ── -->
+    <div class="success-screen" id="successScreen">
+      <div class="success-anim">🎉</div>
+      <div class="success-title">Ficha enviada!</div>
+      <p class="success-msg">Recebemos seu cadastro com sucesso.<br>A coordenação do CircoLo vai entrar em contato em breve pelo WhatsApp ou e-mail informado.</p>
+      <button class="btn-novo" onclick="resetForm()">Enviar outro cadastro</button>
     </div>
 
-    <!-- ── Success ── -->
-    <div class="success-state" id="successState">
-      <div class="success-icon">🎉</div>
-      <div class="success-title">Cadastro enviado!</div>
-      <p class="success-msg">Sua ficha foi recebida com sucesso. A coordenação do CircoLo vai entrar em contato em breve pelo WhatsApp ou e-mail informado.</p>
-      <button class="btn-submit" style="max-width:260px;margin:0 auto;" onclick="resetForm()">
-        Enviar outro cadastro
-      </button>
-    </div>
-  </div>
+  </div><!-- /cad-body -->
 
-  <div class="cadastro-footer">
-    © 2025 Espaço Cultural CircoLo de Criação · Todos os direitos reservados
-  </div>
-</div>
+  <div class="page-footer">© 2025 Espaço Cultural CircoLo de Criação</div>
+
+</div><!-- /cad-page -->
 
 <div class="toast-container" id="toastContainer"></div>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="js/supabase.js"></script>
 <script>
-  const DAYS_ORDER = ['Segunda','Terça','Quarta','Quinta','Sexta','Sábado','Domingo'];
-  let allWorkshops = [];
-  let selectedWorkshopIds = new Set();
+  let currentStep = 1;
+  let photoFile   = null;
 
-  // ── Load workshops ──
-  async function loadWorkshops() {
-    const { data, error } = await sb.from('workshops').select('id, title, day_of_week, time').order('title');
-    const grid = document.getElementById('workshopGrid');
-
-    if (error || !data || !data.length) {
-      grid.innerHTML = '<div class="ws-loading" style="color:var(--color-muted);">Nenhuma oficina disponível no momento.</div>';
-      return;
-    }
-
-    allWorkshops = data;
-    grid.innerHTML = data.map(w => {
-      const days = (w.day_of_week || '').split(',').map(d => d.trim()).join(' · ');
-      const timeStr = w.time ? ` · ${w.time}` : '';
-      return `
-        <label class="workshop-option" id="ws-opt-${w.id}" onclick="toggleWorkshop('${w.id}', this)">
-          <input type="checkbox" value="${w.id}">
-          <div class="ws-check">
-            <span class="ws-check-icon">✓</span>
-          </div>
-          <div class="ws-info">
-            <div class="ws-title">${w.title}</div>
-            <div class="ws-meta">${days}${timeStr}</div>
-          </div>
-        </label>`;
-    }).join('');
+  // ── Stepper visual ──
+  function updateStepper(step) {
+    document.querySelectorAll('.step-item').forEach((el, i) => {
+      const n = i + 1;
+      el.classList.remove('active', 'done');
+      if (n < step)  el.classList.add('done');
+      if (n === step) el.classList.add('active');
+      // troca número por ✓ quando concluído
+      const circle = el.querySelector('.step-circle');
+      circle.textContent = n < step ? '✓' : n;
+    });
+    // linha
+    const line = document.getElementById('step-line-1');
+    if (line) line.classList.toggle('done', step > 1);
   }
 
-  function toggleWorkshop(id, el) {
-    if (selectedWorkshopIds.has(id)) {
-      selectedWorkshopIds.delete(id);
-      el.classList.remove('selected');
+  function goNext() {
+    if (currentStep === 1) {
+      if (!validateStep1()) return;
+      currentStep = 2;
+      document.getElementById('panel-1').classList.remove('active');
+      document.getElementById('panel-2').classList.add('active');
+      document.getElementById('btnBack').style.visibility = 'visible';
+      document.getElementById('btnNextText').textContent = 'Enviar cadastro';
+      document.getElementById('btnNext').innerHTML =
+        '<span id="btnNextText">Enviar cadastro</span><span>✓</span>';
+      updateStepper(2);
+      window.scrollTo({ top: 0, behavior: 'smooth' });
     } else {
-      selectedWorkshopIds.add(id);
-      el.classList.add('selected');
+      submitForm();
     }
   }
 
-  // ── Validation helpers ──
-  function setError(id, on) {
-    const el = document.getElementById(id);
-    if (on) el.classList.add('error');
-    else el.classList.remove('error');
+  function goBack() {
+    if (currentStep === 2) {
+      currentStep = 1;
+      document.getElementById('panel-2').classList.remove('active');
+      document.getElementById('panel-1').classList.add('active');
+      document.getElementById('btnBack').style.visibility = 'hidden';
+      document.getElementById('btnNext').innerHTML =
+        '<span id="btnNextText">Continuar</span><span>→</span>';
+      updateStepper(1);
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
   }
 
-  function showToast(msg, type = 'success') {
-    const container = document.getElementById('toastContainer');
-    const t = document.createElement('div');
-    t.className = `toast ${type}`;
-    t.textContent = msg;
-    container.appendChild(t);
-    setTimeout(() => {
-      t.style.opacity = '0';
-      t.style.transition = 'opacity 0.3s';
-      setTimeout(() => t.remove(), 300);
-    }, 3500);
+  // ── Validações ──
+  function setErr(id, on) {
+    document.getElementById(id).classList.toggle('error', on);
+  }
+
+  function validateStep1() {
+    const nome = document.getElementById('f1Nome').value.trim();
+    const nasc = document.getElementById('f1Nasc').value;
+    let ok = true;
+    if (!nome) { setErr('f1Nome', true); ok = false; } else setErr('f1Nome', false);
+    if (!nasc) { setErr('f1Nasc', true); ok = false; } else setErr('f1Nasc', false);
+    if (!ok) showToast('Preencha os campos obrigatórios.', 'error');
+    return ok;
+  }
+
+  function validateStep2() {
+    const email = document.getElementById('f2Email').value.trim();
+    const whats = document.getElementById('f2Whats').value.trim();
+    let ok = true;
+    const emailOk = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+    if (!email || !emailOk) { setErr('f2Email', true); ok = false; } else setErr('f2Email', false);
+    if (!whats || whats.replace(/\D/g,'').length < 10) { setErr('f2Whats', true); ok = false; } else setErr('f2Whats', false);
+    if (!ok) showToast('Preencha os campos obrigatórios corretamente.', 'error');
+    return ok;
+  }
+
+  // ── Foto ──
+  function previewPhoto(input) {
+    const file = input.files[0];
+    if (!file) return;
+    if (file.size > 3 * 1024 * 1024) { showToast('Foto muito grande (máx. 3 MB).', 'error'); return; }
+    photoFile = file;
+    const reader = new FileReader();
+    reader.onload = e => {
+      const img = document.getElementById('photoPreviewImg');
+      img.src = e.target.result;
+      img.style.display = 'block';
+      document.getElementById('photoPlaceholder').style.display = 'none';
+      document.getElementById('removePhotoBtn').style.display = '';
+    };
+    reader.readAsDataURL(file);
+  }
+
+  function removePhoto() {
+    photoFile = null;
+    document.getElementById('photoInput').value = '';
+    document.getElementById('photoPreviewImg').style.display = 'none';
+    document.getElementById('photoPlaceholder').style.display = '';
+    document.getElementById('removePhotoBtn').style.display = 'none';
   }
 
   // ── Submit ──
   async function submitForm() {
-    const nome     = document.getElementById('fNome').value.trim();
-    const nomeSoc  = document.getElementById('fNomeSocial').value.trim();
-    const whatsapp = document.getElementById('fWhatsapp').value.trim();
-    const email    = document.getElementById('fEmail').value.trim();
-
-    // Validate
-    let hasError = false;
-    setError('fNome', !nome);
-    setError('fWhatsapp', !whatsapp);
-    setError('fEmail', !email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email));
-    if (!nome || !whatsapp || !email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) hasError = true;
-    if (hasError) {
-      showToast('Preencha todos os campos obrigatórios.', 'error');
-      return;
-    }
-    if (selectedWorkshopIds.size === 0) {
-      showToast('Selecione ao menos uma oficina.', 'error');
-      return;
-    }
-
-    const btn  = document.getElementById('submitBtn');
-    const span = document.getElementById('submitText');
+    if (!validateStep2()) return;
+    const btn = document.getElementById('btnNext');
     btn.disabled = true;
-    span.textContent = '⏳ Enviando…';
+    btn.innerHTML = '<span>⏳ Enviando…</span>';
 
-    const { error } = await sb.from('inscricoes_oficineiros').insert({
-      nome,
-      nome_social:   nomeSoc || null,
-      whatsapp,
-      email,
-      oficinas_ids:  [...selectedWorkshopIds],
-      status:        'pendente',
-    });
-
-    btn.disabled = false;
-    span.textContent = '✅ Enviar ficha de cadastro';
-
-    if (error) {
-      showToast('Erro ao enviar cadastro: ' + error.message, 'error');
-      return;
+    // Upload da foto
+    let foto_url = null;
+    if (photoFile) {
+      const ext  = photoFile.name.split('.').pop();
+      const path = `profiles/${Date.now()}.${ext}`;
+      const { error: upErr } = await sb.storage.from('event-images').upload(path, photoFile, { upsert: true });
+      if (!upErr) {
+        const { data: urlData } = sb.storage.from('event-images').getPublicUrl(path);
+        foto_url = urlData.publicUrl;
+      }
     }
 
-    // Show success
+    const payload = {
+      nome:           document.getElementById('f1Nome').value.trim(),
+      nome_social:    document.getElementById('f1NomeSocial').value.trim() || null,
+      data_nascimento:document.getElementById('f1Nasc').value || null,
+      cpf:            document.getElementById('f1CPF').value.replace(/\D/g,'') || null,
+      foto_url,
+      email:          document.getElementById('f2Email').value.trim(),
+      whatsapp:       document.getElementById('f2Whats').value.trim(),
+      instagram:      document.getElementById('f2Insta').value.trim().replace(/^@/,'') || null,
+      outro_link:     document.getElementById('f2Link').value.trim() || null,
+      status:         'pendente',
+      oficinas_ids:   [],
+    };
+
+    const { error } = await sb.from('inscricoes_oficineiros').insert(payload);
+    btn.disabled = false;
+    btn.innerHTML = '<span id="btnNextText">Enviar cadastro</span><span>✓</span>';
+
+    if (error) { showToast('Erro ao enviar: ' + error.message, 'error'); return; }
+
+    // Sucesso
     document.getElementById('formCard').style.display = 'none';
-    document.getElementById('successState').classList.add('show');
+    document.getElementById('successScreen').classList.add('show');
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }
 
   // ── Reset ──
   function resetForm() {
-    document.getElementById('fNome').value = '';
-    document.getElementById('fNomeSocial').value = '';
-    document.getElementById('fWhatsapp').value = '';
-    document.getElementById('fEmail').value = '';
-    selectedWorkshopIds.clear();
-    document.querySelectorAll('.workshop-option.selected').forEach(el => el.classList.remove('selected'));
+    currentStep = 1;
+    photoFile   = null;
+    ['f1Nome','f1NomeSocial','f1CPF','f2Email','f2Whats','f2Insta','f2Link'].forEach(id => {
+      document.getElementById(id).value = '';
+    });
+    document.getElementById('f1Nasc').value = '';
+    removePhoto();
+    document.getElementById('panel-1').classList.add('active');
+    document.getElementById('panel-2').classList.remove('active');
+    document.getElementById('btnBack').style.visibility = 'hidden';
+    document.getElementById('btnNext').innerHTML = '<span id="btnNextText">Continuar</span><span>→</span>';
+    updateStepper(1);
     document.getElementById('formCard').style.display = '';
-    document.getElementById('successState').classList.remove('show');
+    document.getElementById('successScreen').classList.remove('show');
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }
 
-  // ── WhatsApp mask ──
-  document.getElementById('fWhatsapp').addEventListener('input', function () {
-    let v = this.value.replace(/\D/g, '').slice(0, 11);
+  // ── Máscaras ──
+  document.getElementById('f2Whats').addEventListener('input', function () {
+    let v = this.value.replace(/\D/g,'').slice(0,11);
     if (v.length > 6) v = `(${v.slice(0,2)}) ${v.slice(2,7)}-${v.slice(7)}`;
     else if (v.length > 2) v = `(${v.slice(0,2)}) ${v.slice(2)}`;
-    else if (v.length > 0) v = `(${v}`;
+    else if (v.length) v = `(${v}`;
     this.value = v;
   });
 
-  // ── Init ──
-  loadWorkshops();
+  document.getElementById('f1CPF').addEventListener('input', function () {
+    let v = this.value.replace(/\D/g,'').slice(0,11);
+    if (v.length > 9) v = `${v.slice(0,3)}.${v.slice(3,6)}.${v.slice(6,9)}-${v.slice(9)}`;
+    else if (v.length > 6) v = `${v.slice(0,3)}.${v.slice(3,6)}.${v.slice(6)}`;
+    else if (v.length > 3) v = `${v.slice(0,3)}.${v.slice(3)}`;
+    this.value = v;
+  });
+
+  // ── Toast ──
+  function showToast(msg, type = 'success') {
+    const c = document.getElementById('toastContainer');
+    const t = document.createElement('div');
+    t.className = `toast ${type}`;
+    t.textContent = msg;
+    c.appendChild(t);
+    setTimeout(() => { t.style.opacity='0'; t.style.transition='opacity .3s'; setTimeout(()=>t.remove(),300); }, 3500);
+  }
 </script>
 </body>
 </html>
