@@ -1,0 +1,1180 @@
+<!DOCTYPE html>
+<html lang="pt-BR" class="app-page">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Admin — CircoLo</title>
+  <link rel="stylesheet" href="css/style.css">
+  <style>
+    /* ── Tabs ── */
+    .tab-nav {
+      display: flex;
+      gap: var(--space-1);
+      background: var(--color-cream);
+      border-radius: var(--radius-full);
+      padding: 4px;
+    }
+    .tab-btn {
+      padding: var(--space-2) var(--space-5);
+      border-radius: var(--radius-full);
+      font-size: var(--text-sm);
+      font-weight: var(--weight-medium);
+      color: var(--color-muted);
+      cursor: pointer;
+      transition: all var(--duration-fast) var(--ease-out);
+    }
+    .tab-btn:hover { color: var(--color-ink); }
+    .tab-btn.active {
+      background: var(--color-white);
+      color: var(--color-ink);
+      box-shadow: var(--shadow-sm);
+      font-weight: var(--weight-semibold);
+    }
+    /* ── Calendar full view in admin ── */
+    .admin-cal-wrap {
+      background: var(--color-white);
+      padding: var(--space-5);
+      display: flex;
+      flex-direction: column;
+      height: 100%;
+      box-sizing: border-box;
+    }
+    .admin-cal-layout {
+      display: grid;
+      grid-template-columns: 1fr 260px;
+      gap: var(--space-5);
+      flex: 1;
+      min-height: 0;
+    }
+    .admin-cal-main {
+      display: flex;
+      flex-direction: column;
+      min-height: 0;
+    }
+    .admin-cal-sidebar {
+      display: flex;
+      flex-direction: column;
+      gap: var(--space-3);
+      overflow-y: auto;
+      padding-right: var(--space-1);
+    }
+    #adminCalGrid {
+      flex: 1;
+      min-height: 0;
+      grid-auto-rows: 1fr;
+    }
+    #adminCalGrid .calendar-day {
+      min-height: 0;
+    }
+
+    /* Calendar panel: no external scroll — content fills it */
+    #panel-calendario {
+      overflow: hidden;
+    }
+
+    /* ── Member card ── */
+    .member-card {
+      display: flex;
+      align-items: center;
+      gap: var(--space-4);
+      padding: var(--space-4);
+      background: var(--color-white);
+      border-radius: var(--radius-xl);
+      border: 1px solid var(--color-border-light);
+      box-shadow: var(--shadow-xs);
+      transition: all var(--duration-base) var(--ease-out);
+    }
+    .member-card:hover { box-shadow: var(--shadow-md); transform: translateY(-1px); }
+    .member-avatar-lg {
+      width: 44px; height: 44px;
+      border-radius: var(--radius-full);
+      background: var(--gradient-brand);
+      display: flex; align-items: center; justify-content: center;
+      font-size: var(--text-base);
+      font-weight: var(--weight-bold);
+      color: var(--color-white);
+      flex-shrink: 0;
+    }
+    .member-info { flex: 1; min-width: 0; }
+    .member-name { font-weight: var(--weight-semibold); color: var(--color-ink); margin-bottom: 2px; font-size: var(--text-sm); }
+    .member-email { font-size: var(--text-xs); color: var(--color-muted); margin-bottom: var(--space-1); }
+    .member-workshops { display: flex; flex-wrap: wrap; gap: var(--space-1); }
+
+    /* ── Upcoming list ── */
+    .upcoming-events { display: flex; flex-direction: column; gap: var(--space-2); overflow-y: auto; flex: 1; min-height: 0; }
+
+    /* ── Dashboard grid ── */
+    .dash-grid { display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-5); flex: 1; min-height: 0; overflow: hidden; }
+    .dash-col { display: flex; flex-direction: column; min-height: 0; gap: var(--space-4); }
+    .dash-card { background: var(--color-white); border-radius: var(--radius-2xl); padding: var(--space-5); border: 1px solid var(--color-border-light); box-shadow: var(--shadow-sm); display: flex; flex-direction: column; flex: 1; min-height: 0; overflow: hidden; }
+    .dash-card-title { font-family: var(--font-display); font-size: var(--text-base); font-weight: var(--weight-semibold); color: var(--color-ink); margin-bottom: var(--space-4); flex-shrink: 0; }
+
+    /* ── Scrollable grid ── */
+    .grid-3-scroll { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: var(--space-4); overflow-y: auto; flex: 1; min-height: 0; align-content: start; }
+
+    /* ── Form grid ── */
+    .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-4); }
+
+    /* ── Ticket option cards ── */
+    .ticket-opt:hover { border-color: var(--color-subtle) !important; background: var(--color-cream) !important; }
+
+    /* ── Empty state ── */
+    .empty-state { text-align: center; padding: var(--space-10) var(--space-8); color: var(--color-muted); }
+    .empty-icon { font-size: 40px; margin-bottom: var(--space-3); }
+    .empty-title { font-family: var(--font-display); font-size: var(--text-lg); font-weight: 600; color: var(--color-charcoal); margin-bottom: var(--space-2); }
+
+    /* ── Panel inner layout ── */
+    .panel-inner { display: flex; flex-direction: column; flex: 1; min-height: 0; gap: var(--space-4); }
+    .panel-toolbar { display: flex; align-items: center; justify-content: space-between; flex-shrink: 0; }
+
+    /* ── Day bottom sheet (mobile) ── */
+    .day-sheet {
+      display: none;
+      position: fixed;
+      bottom: 0; left: 0; right: 0;
+      background: var(--color-white);
+      border-radius: var(--radius-2xl) var(--radius-2xl) 0 0;
+      box-shadow: 0 -8px 40px rgba(0,0,0,0.18);
+      z-index: calc(var(--z-overlay) + 1);
+      padding: var(--space-5);
+      max-height: 55vh;
+      overflow-y: auto;
+      transform: translateY(100%);
+      transition: transform 0.3s ease;
+    }
+    .day-sheet.open { display: block; transform: translateY(0); }
+    .day-sheet-handle { width: 40px; height: 4px; background: var(--color-border); border-radius: 2px; margin: 0 auto var(--space-4); }
+    .day-sheet-overlay {
+      display: none;
+      position: fixed; inset: 0;
+      background: rgba(0,0,0,0.35);
+      z-index: var(--z-overlay);
+    }
+    .day-sheet-overlay.open { display: block; }
+
+    @media (max-width: 900px) {
+      .admin-cal-layout { grid-template-columns: 1fr !important; }
+      .admin-cal-sidebar { display: none; }
+      .dash-grid { grid-template-columns: 1fr; }
+      .form-row { grid-template-columns: 1fr; }
+      .admin-cal-wrap { padding: var(--space-2); }
+      #adminCalGrid .calendar-day { padding: var(--space-1); }
+    }
+  </style>
+</head>
+<body>
+<div class="app-layout">
+
+  <!-- ── SIDEBAR ── -->
+  <aside class="sidebar">
+    <div class="sidebar-logo">
+      <img src="assets/logo.jpeg" alt="CircoLo" style="filter: brightness(0) invert(1) opacity(0.9);">
+    </div>
+
+    <div class="nav-section">
+      <div class="nav-section-label">Menu</div>
+      <div class="nav-item active" onclick="showTab('dashboard')">
+        <svg class="nav-icon" viewBox="0 0 20 20" fill="currentColor"><path d="M2 11a1 1 0 011-1h2a1 1 0 011 1v5a1 1 0 01-1 1H3a1 1 0 01-1-1v-5zm6-4a1 1 0 011-1h2a1 1 0 011 1v9a1 1 0 01-1 1H9a1 1 0 01-1-1V7zm6-3a1 1 0 011-1h2a1 1 0 011 1v12a1 1 0 01-1 1h-2a1 1 0 01-1-1V4z"/></svg>
+        Dashboard
+      </div>
+      <div class="nav-item" onclick="showTab('calendario')">
+        <svg class="nav-icon" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M6 2a1 1 0 00-1 1v1H4a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2h-1V3a1 1 0 10-2 0v1H7V3a1 1 0 00-1-1zm0 5a1 1 0 000 2h8a1 1 0 100-2H6z" clip-rule="evenodd"/></svg>
+        Calendário
+      </div>
+      <div class="nav-item" onclick="showTab('eventos')">
+        <svg class="nav-icon" viewBox="0 0 20 20" fill="currentColor"><path d="M9 4.804A7.968 7.968 0 005.5 4c-1.255 0-2.443.29-3.5.804v10A7.969 7.969 0 015.5 14c1.669 0 3.218.51 4.5 1.385A7.962 7.962 0 0114.5 14c1.255 0 2.443.29 3.5.804v-10A7.968 7.968 0 0014.5 4c-1.255 0-2.443.29-3.5.804V12a1 1 0 11-2 0V4.804z"/></svg>
+        Eventos
+      </div>
+      <div class="nav-item" onclick="showTab('oficinas')">
+        <svg class="nav-icon" viewBox="0 0 20 20" fill="currentColor"><path d="M10.394 2.08a1 1 0 00-.788 0l-7 3a1 1 0 000 1.84L5.25 8.051a.999.999 0 01.356-.257l4-1.714a1 1 0 11.788 1.838L7.667 9.088l1.94.831a1 1 0 00.787 0l7-3a1 1 0 000-1.838l-7-3zM3.31 9.397L5 10.12v4.102a8.969 8.969 0 00-1.05-.174 1 1 0 01-.89-.89 11.115 11.115 0 01.25-3.762zm5.99 7.176A9.026 9.026 0 007 14.935v-3.957l1.818.78a3 3 0 002.364 0l5.508-2.361a11.026 11.026 0 01.25 3.762 1 1 0 01-.89.89 8.968 8.968 0 00-5.35 2.524 1 1 0 01-1.4 0zM6 18a1 1 0 001-1v-2.065a8.935 8.935 0 00-2-.712V17a1 1 0 001 1z"/></svg>
+        Oficinas
+      </div>
+      <div class="nav-item" onclick="showTab('membros')">
+        <svg class="nav-icon" viewBox="0 0 20 20" fill="currentColor"><path d="M9 6a3 3 0 11-6 0 3 3 0 016 0zM17 6a3 3 0 11-6 0 3 3 0 016 0zM12.93 17c.046-.327.07-.66.07-1a6.97 6.97 0 00-1.5-4.33A5 5 0 0119 16v1h-6.07zM6 11a5 5 0 015 5v1H1v-1a5 5 0 015-5z"/></svg>
+        Membros
+      </div>
+    </div>
+
+    <div class="sidebar-footer">
+      <div class="user-chip">
+        <div class="user-avatar" id="sidebarInitials">AD</div>
+        <div class="user-info">
+          <div class="user-name" id="sidebarName">Administrador</div>
+          <div class="user-role">Administrador</div>
+        </div>
+      </div>
+      <button class="btn btn-ghost btn-sm w-full mt-4" style="color:rgba(255,255,255,0.5);border-color:rgba(255,255,255,0.1);" onclick="Auth.logout()">
+        Sair
+      </button>
+    </div>
+  </aside>
+
+  <!-- ── SIDEBAR OVERLAY (mobile) ── -->
+  <div class="sidebar-overlay" id="sidebarOverlay" onclick="closeSidebar()"></div>
+
+  <!-- ── MAIN ── -->
+  <main class="main-content">
+    <div class="page-header">
+      <div style="display:flex;align-items:center;gap:var(--space-3);">
+        <button class="hamburger" id="hamburgerBtn" onclick="openSidebar()" aria-label="Menu">
+          <span></span><span></span><span></span>
+        </button>
+        <h1 class="page-title" id="pageTitle">Dashboard</h1>
+      </div>
+      <div class="flex items-center gap-3">
+        <div class="tab-nav" id="mainTabs">
+          <button class="tab-btn active" onclick="showTab('dashboard')">Dashboard</button>
+          <button class="tab-btn" onclick="showTab('calendario')">Calendário</button>
+          <button class="tab-btn" onclick="showTab('eventos')">Eventos</button>
+          <button class="tab-btn" onclick="showTab('oficinas')">Oficinas</button>
+          <button class="tab-btn" onclick="showTab('membros')">Membros</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="page-body">
+
+      <!-- ══ DASHBOARD ══ -->
+      <div class="tab-panel active" id="panel-dashboard">
+        <div class="stats-grid">
+          <div class="stat-card red">
+            <div class="stat-icon red">🎭</div>
+            <div class="stat-value" id="statApresentacoes">0</div>
+            <div class="stat-label">Apresentações este mês</div>
+          </div>
+          <div class="stat-card orange">
+            <div class="stat-icon orange">🎨</div>
+            <div class="stat-value" id="statOficinas">0</div>
+            <div class="stat-label">Oficinas ativas</div>
+          </div>
+          <div class="stat-card gold">
+            <div class="stat-icon gold">👥</div>
+            <div class="stat-value" id="statMembros">0</div>
+            <div class="stat-label">Oficineiros</div>
+          </div>
+          <div class="stat-card dark">
+            <div class="stat-icon dark">📋</div>
+            <div class="stat-value" id="statEventos">0</div>
+            <div class="stat-label">Eventos este mês</div>
+          </div>
+        </div>
+
+        <div class="dash-grid">
+          <div class="dash-col">
+            <div class="dash-card">
+              <div class="dash-card-title" style="display:flex;align-items:center;justify-content:space-between;">
+                Próximos eventos
+                <button class="btn btn-ghost btn-sm" onclick="showTab('eventos')">Ver todos</button>
+              </div>
+              <div class="upcoming-events" id="dashUpcoming"></div>
+            </div>
+          </div>
+          <div class="dash-col">
+            <div class="dash-card" style="flex:0 0 auto;max-height:50%;">
+              <div class="dash-card-title" style="display:flex;align-items:center;justify-content:space-between;">
+                Oficineiros
+                <button class="btn btn-ghost btn-sm" onclick="showTab('membros')">Ver todos</button>
+              </div>
+              <div class="flex flex-col gap-2" id="dashMembers" style="overflow-y:auto;flex:1;min-height:0;"></div>
+            </div>
+            <div class="dash-card">
+              <div class="dash-card-title">Ocupação das oficinas</div>
+              <div class="flex flex-col gap-3" id="workshopOccupancy" style="overflow-y:auto;flex:1;min-height:0;"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ══ CALENDÁRIO ══ -->
+      <div class="tab-panel no-pad" id="panel-calendario">
+        <div class="admin-cal-wrap" style="border-radius:0;border:none;flex:1;">
+          <div class="cal-nav">
+            <span class="cal-nav-month" id="adminCalLabel">—</span>
+            <div class="flex items-center gap-3">
+              <div class="legend">
+                <div class="legend-item"><span class="legend-dot" style="background:var(--cat-apresentacao)"></span>Apresentação</div>
+                <div class="legend-item"><span class="legend-dot" style="background:var(--cat-oficina)"></span>Oficina</div>
+                <div class="legend-item"><span class="legend-dot" style="background:#C8A010"></span>Programação</div>
+                <div class="legend-item"><span class="legend-dot" style="background:var(--cat-especial)"></span>Especial</div>
+              </div>
+              <div class="cal-nav-btns">
+                <button class="cal-btn" id="adminCalPrev">‹</button>
+                <button class="cal-btn" id="adminCalNext">›</button>
+              </div>
+            </div>
+          </div>
+          <div class="admin-cal-layout">
+            <div class="admin-cal-main">
+              <div class="calendar-header-row">
+                <div class="calendar-dow">Dom</div><div class="calendar-dow">Seg</div>
+                <div class="calendar-dow">Ter</div><div class="calendar-dow">Qua</div>
+                <div class="calendar-dow">Qui</div><div class="calendar-dow">Sex</div>
+                <div class="calendar-dow">Sáb</div>
+              </div>
+              <div class="calendar-grid" id="adminCalGrid" style="gap:2px;"></div>
+            </div>
+            <div class="admin-cal-sidebar">
+              <div style="font-family:var(--font-display);font-size:var(--text-lg);font-weight:600;color:var(--color-ink);" id="adminDayTitle">Selecione um dia</div>
+              <div id="adminDayEvents">
+                <div style="color:var(--color-muted);font-size:var(--text-sm);">Clique em um dia para ver os eventos.</div>
+              </div>
+              <button class="btn btn-primary btn-sm" onclick="openModal('newEventModal')">+ Novo evento neste dia</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ══ EVENTOS ══ -->
+      <div class="tab-panel" id="panel-eventos">
+        <div class="panel-toolbar" style="margin-bottom:var(--space-4);">
+          <button class="btn btn-ghost btn-sm" onclick="deleteAllEvents()" style="color:var(--color-red);border-color:rgba(217,59,42,0.3);">🗑 Apagar todos</button>
+          <button class="btn btn-primary" onclick="openNewEventModal()">+ Novo evento</button>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th></th>
+                <th>Evento</th>
+                <th>Tipo</th>
+                <th>Data</th>
+                <th>Início</th>
+                <th>Fim</th>
+                <th>Lotação</th>
+                <th>Ingresso</th>
+                <th>Local</th>
+                <th></th>
+              </tr>
+            </thead>
+            <tbody id="eventsTable"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- ══ OFICINAS ══ -->
+      <div class="tab-panel" id="panel-oficinas">
+        <div class="panel-toolbar" style="margin-bottom:var(--space-4);">
+          <div></div>
+          <button class="btn btn-primary" onclick="document.getElementById('wsEditId').value='';document.getElementById('wsModalTitle').textContent='Nova oficina';document.getElementById('wsSubmitBtn').textContent='Criar oficina';openModal('newWorkshopModal')">+ Nova oficina</button>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Oficina</th>
+                <th>Oficineiro</th>
+                <th>Dia</th>
+                <th>Horário</th>
+                <th>Duração</th>
+                <th>Inscritos</th>
+                <th>Status</th>
+                <th></th>
+              </tr>
+            </thead>
+            <tbody id="workshopsTable"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- ══ MEMBROS ══ -->
+      <div class="tab-panel" id="panel-membros">
+        <div class="panel-toolbar" style="margin-bottom:var(--space-4);">
+          <div></div>
+          <button class="btn btn-primary" onclick="openModal('newMemberModal')">+ Novo membro</button>
+        </div>
+        <div class="grid-3-scroll" id="membersGrid"></div>
+      </div>
+
+    </div>
+  </main>
+</div>
+
+<!-- ══ DAY BOTTOM SHEET (mobile) ══ -->
+<div class="day-sheet-overlay" id="daySheetOverlay" onclick="closeDaySheet()"></div>
+<div class="day-sheet" id="daySheet">
+  <div class="day-sheet-handle"></div>
+  <div style="font-family:var(--font-display);font-size:var(--text-lg);font-weight:600;margin-bottom:var(--space-3);" id="sheetDayTitle">—</div>
+  <div id="sheetDayEvents"></div>
+  <button class="btn btn-primary btn-sm w-full mt-4" onclick="openModal('newEventModal');closeDaySheet();">+ Novo evento neste dia</button>
+</div>
+
+<!-- ══ MODAL: Evento (criar / editar) ══ -->
+<div class="modal-overlay" id="newEventModal">
+  <div class="modal" style="max-width:600px;">
+    <div class="modal-header">
+      <span class="modal-title" id="evModalTitle">Novo evento</span>
+      <button class="btn btn-ghost btn-icon btn-sm" onclick="closeModal('newEventModal')">✕</button>
+    </div>
+    <div class="modal-body">
+      <input type="hidden" id="evEditId">
+
+      <!-- Cartaz / imagem -->
+      <div class="field">
+        <label>Cartaz do evento</label>
+        <div id="evImagePreviewWrap" style="display:none;margin-bottom:var(--space-2);">
+          <img id="evImagePreview" src="" alt="Cartaz" style="width:100%;max-height:180px;object-fit:cover;border-radius:var(--radius-lg);border:1px solid var(--color-border-light);">
+          <button type="button" onclick="removeEventImage()" style="margin-top:4px;font-size:var(--text-xs);color:var(--color-red);background:none;border:none;cursor:pointer;">✕ Remover imagem</button>
+        </div>
+        <input class="input" type="file" id="evImageFile" accept="image/*" onchange="previewEventImage(this)" style="padding:var(--space-2);">
+        <p style="font-size:var(--text-xs);color:var(--color-muted);margin-top:4px;">JPG, PNG ou WebP · máx. 5 MB</p>
+      </div>
+
+      <!-- Título -->
+      <div class="field">
+        <label>Título do evento</label>
+        <input class="input" id="evTitle" placeholder="Ex.: Espetáculo de Encerramento">
+      </div>
+
+      <!-- Tipo + Data -->
+      <div class="form-row">
+        <div class="field">
+          <label>Tipo</label>
+          <select class="select" id="evType">
+            <option value="apresentacao">🎭 Apresentação</option>
+            <option value="oficina">🎨 Oficina</option>
+            <option value="programacao">📋 Programação</option>
+            <option value="especial">⭐ Especial</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>Data</label>
+          <input class="input" type="date" id="evDate">
+        </div>
+      </div>
+
+      <!-- Hora início + Hora fim -->
+      <div class="form-row">
+        <div class="field">
+          <label>Hora de início</label>
+          <input class="input" type="time" id="evTime">
+        </div>
+        <div class="field">
+          <label>Hora de final</label>
+          <input class="input" type="time" id="evTimeEnd">
+        </div>
+      </div>
+
+      <!-- Local + Lotação -->
+      <div class="form-row">
+        <div class="field">
+          <label>Local</label>
+          <input class="input" id="evLocation" placeholder="Ex.: Palco Principal">
+        </div>
+        <div class="field">
+          <label>Lotação (nº de vagas)</label>
+          <input class="input" type="number" id="evCapacity" placeholder="Ex.: 80" min="1">
+        </div>
+      </div>
+
+      <!-- Responsável -->
+      <div class="field">
+        <label>Responsável / Artista</label>
+        <input class="input" id="evInstructor" placeholder="Ex.: Ana Beatriz">
+      </div>
+
+      <!-- Tipo de ingresso -->
+      <div class="field">
+        <label>Tipo de ingresso</label>
+        <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:var(--space-2);margin-top:var(--space-1);" id="evTicketGroup">
+          <label class="ticket-opt" data-val="gratuito" onclick="selectTicket('gratuito')" style="display:flex;flex-direction:column;align-items:center;gap:4px;border:2px solid var(--color-border);border-radius:var(--radius-lg);padding:var(--space-3) var(--space-2);cursor:pointer;transition:all .15s;text-align:center;">
+            <span style="font-size:22px;">🎟️</span>
+            <span style="font-size:var(--text-xs);font-weight:600;">Gratuito</span>
+          </label>
+          <label class="ticket-opt" data-val="financeiro" onclick="selectTicket('financeiro')" style="display:flex;flex-direction:column;align-items:center;gap:4px;border:2px solid var(--color-border);border-radius:var(--radius-lg);padding:var(--space-3) var(--space-2);cursor:pointer;transition:all .15s;text-align:center;">
+            <span style="font-size:22px;">💰</span>
+            <span style="font-size:var(--text-xs);font-weight:600;">Financeiro</span>
+          </label>
+          <label class="ticket-opt" data-val="contribuicao" onclick="selectTicket('contribuicao')" style="display:flex;flex-direction:column;align-items:center;gap:4px;border:2px solid var(--color-border);border-radius:var(--radius-lg);padding:var(--space-3) var(--space-2);cursor:pointer;transition:all .15s;text-align:center;">
+            <span style="font-size:22px;">🤝</span>
+            <span style="font-size:var(--text-xs);font-weight:600;line-height:1.2;">Contribuição consciente</span>
+          </label>
+        </div>
+        <input type="hidden" id="evTicketType" value="gratuito">
+      </div>
+
+      <!-- Valor (aparece só se financeiro ou contribuição) -->
+      <div class="field" id="evPriceField" style="display:none;">
+        <label id="evPriceLabel">Valor (R$)</label>
+        <input class="input" id="evPrice" placeholder="Ex.: 20,00">
+      </div>
+
+      <!-- Descrição -->
+      <div class="field">
+        <label>Descrição</label>
+        <textarea class="textarea" id="evDesc" placeholder="Descreva o evento…"></textarea>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeModal('newEventModal')">Cancelar</button>
+      <button class="btn btn-primary" id="evSubmitBtn" onclick="saveEvent()">Criar evento</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══ MODAL: Nova oficina ══ -->
+<div class="modal-overlay" id="newWorkshopModal">
+  <div class="modal">
+    <div class="modal-header">
+      <span class="modal-title" id="wsModalTitle">Nova oficina</span>
+      <button class="btn btn-ghost btn-icon btn-sm" onclick="closeModal('newWorkshopModal')">✕</button>
+    </div>
+    <div class="modal-body">
+      <input type="hidden" id="wsEditId">
+      <div class="field">
+        <label>Nome da oficina</label>
+        <input class="input" id="wsTitle" placeholder="Ex.: Teatro do Oprimido">
+      </div>
+      <div class="field">
+        <label>Oficineiro responsável</label>
+        <select class="select" id="wsInstructor"></select>
+      </div>
+      <div class="field">
+        <label>Dias da semana</label>
+        <div style="display:flex;flex-wrap:wrap;gap:var(--space-2);margin-top:var(--space-1);" id="wsDaysGroup">
+          <label style="display:flex;align-items:center;gap:6px;cursor:pointer;font-size:var(--text-sm);font-weight:var(--weight-medium);padding:6px 12px;border:1.5px solid var(--color-border);border-radius:var(--radius-full);transition:all var(--duration-fast);" class="day-check-label">
+            <input type="checkbox" value="Segunda" style="display:none;" onchange="toggleDayLabel(this)"> Segunda
+          </label>
+          <label style="display:flex;align-items:center;gap:6px;cursor:pointer;font-size:var(--text-sm);font-weight:var(--weight-medium);padding:6px 12px;border:1.5px solid var(--color-border);border-radius:var(--radius-full);transition:all var(--duration-fast);" class="day-check-label">
+            <input type="checkbox" value="Terça" style="display:none;" onchange="toggleDayLabel(this)"> Terça
+          </label>
+          <label style="display:flex;align-items:center;gap:6px;cursor:pointer;font-size:var(--text-sm);font-weight:var(--weight-medium);padding:6px 12px;border:1.5px solid var(--color-border);border-radius:var(--radius-full);transition:all var(--duration-fast);" class="day-check-label">
+            <input type="checkbox" value="Quarta" style="display:none;" onchange="toggleDayLabel(this)"> Quarta
+          </label>
+          <label style="display:flex;align-items:center;gap:6px;cursor:pointer;font-size:var(--text-sm);font-weight:var(--weight-medium);padding:6px 12px;border:1.5px solid var(--color-border);border-radius:var(--radius-full);transition:all var(--duration-fast);" class="day-check-label">
+            <input type="checkbox" value="Quinta" style="display:none;" onchange="toggleDayLabel(this)"> Quinta
+          </label>
+          <label style="display:flex;align-items:center;gap:6px;cursor:pointer;font-size:var(--text-sm);font-weight:var(--weight-medium);padding:6px 12px;border:1.5px solid var(--color-border);border-radius:var(--radius-full);transition:all var(--duration-fast);" class="day-check-label">
+            <input type="checkbox" value="Sexta" style="display:none;" onchange="toggleDayLabel(this)"> Sexta
+          </label>
+          <label style="display:flex;align-items:center;gap:6px;cursor:pointer;font-size:var(--text-sm);font-weight:var(--weight-medium);padding:6px 12px;border:1.5px solid var(--color-border);border-radius:var(--radius-full);transition:all var(--duration-fast);" class="day-check-label">
+            <input type="checkbox" value="Sábado" style="display:none;" onchange="toggleDayLabel(this)"> Sábado
+          </label>
+          <label style="display:flex;align-items:center;gap:6px;cursor:pointer;font-size:var(--text-sm);font-weight:var(--weight-medium);padding:6px 12px;border:1.5px solid var(--color-border);border-radius:var(--radius-full);transition:all var(--duration-fast);" class="day-check-label">
+            <input type="checkbox" value="Domingo" style="display:none;" onchange="toggleDayLabel(this)"> Domingo
+          </label>
+        </div>
+      </div>
+      <div class="field">
+        <label>Horário</label>
+        <input class="input" type="time" id="wsTime">
+      </div>
+      <div class="form-row">
+        <div class="field">
+          <label>Duração</label>
+          <input class="input" id="wsDuration" placeholder="Ex.: 2h">
+        </div>
+        <div class="field">
+          <label>Capacidade</label>
+          <input class="input" type="number" id="wsCapacity" placeholder="Ex.: 15">
+        </div>
+      </div>
+      <div class="field">
+        <label>Descrição</label>
+        <textarea class="textarea" id="wsDesc" placeholder="Descreva a oficina…"></textarea>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeModal('newWorkshopModal')">Cancelar</button>
+      <button class="btn btn-primary" id="wsSubmitBtn" onclick="saveWorkshop()">Criar oficina</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══ MODAL: Novo membro ══ -->
+<div class="modal-overlay" id="newMemberModal">
+  <div class="modal">
+    <div class="modal-header">
+      <span class="modal-title">Novo oficineiro</span>
+      <button class="btn btn-ghost btn-icon btn-sm" onclick="closeModal('newMemberModal')">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="field">
+        <label>Nome completo</label>
+        <input class="input" id="memName" placeholder="Ex.: Fernanda Lima">
+      </div>
+      <div class="field">
+        <label>E-mail</label>
+        <input class="input" type="email" id="memEmail" placeholder="email@exemplo.com">
+      </div>
+      <div class="form-row">
+        <div class="field">
+          <label>Senha provisória</label>
+          <input class="input" id="memPass" placeholder="••••••••">
+        </div>
+        <div class="field" style="justify-content:flex-end;">
+          <button class="btn btn-ghost btn-sm" onclick="document.getElementById('memPass').value = Math.random().toString(36).slice(2,10)">Gerar senha</button>
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeModal('newMemberModal')">Cancelar</button>
+      <button class="btn btn-primary" onclick="saveMember()">Criar membro</button>
+    </div>
+  </div>
+</div>
+
+<!-- ── Close modal on overlay click ── -->
+<div class="toast-container" id="toastContainer"></div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="js/supabase.js"></script>
+<script>
+  const today = new Date();
+  let adminYear = today.getFullYear();
+  let adminMonth = today.getMonth();
+  let adminSelectedDate = null;
+  let adminCachedEvents = [];
+  let adminCachedWorkshops = [];
+  const DAY_INDEX = { 'Domingo':0,'Segunda':1,'Terça':2,'Quarta':3,'Quinta':4,'Sexta':5,'Sábado':6 };
+
+  // ── Tab navigation ──
+  const titles = { dashboard: 'Dashboard', calendario: 'Calendário', eventos: 'Eventos', oficinas: 'Oficinas', membros: 'Membros' };
+  function showTab(tab) {
+    document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+    document.querySelectorAll('.nav-item').forEach(b => b.classList.remove('active'));
+    document.getElementById(`panel-${tab}`).classList.add('active');
+    document.querySelectorAll('.tab-btn').forEach(b => { if (b.textContent.trim().toLowerCase() === titles[tab].toLowerCase()) b.classList.add('active'); });
+    document.querySelectorAll('.nav-item').forEach(b => { if (b.textContent.trim() === titles[tab]) b.classList.add('active'); });
+    document.getElementById('pageTitle').textContent = titles[tab];
+    if (tab === 'calendario') loadAdminCalendar();
+  }
+
+  // ── Admin calendar ──
+  async function loadAdminCalendar() {
+    [adminCachedEvents, adminCachedWorkshops] = await Promise.all([
+      Calendar.getEventsForMonth(adminYear, adminMonth),
+      Calendar.getWorkshops()
+    ]);
+    renderAdminCalendar();
+  }
+  function getAdminEventsForDate(date) {
+    return adminCachedEvents.filter(e =>
+      e.date.getFullYear() === date.getFullYear() &&
+      e.date.getMonth() === date.getMonth() &&
+      e.date.getDate() === date.getDate()
+    );
+  }
+  function getAdminWorkshopsForDate(date) {
+    const dow = date.getDay();
+    return adminCachedWorkshops.filter(w =>
+      (w.day_of_week || '').split(',').map(d => d.trim()).some(d => DAY_INDEX[d] === dow)
+    );
+  }
+  function renderAdminCalendar() {
+    const grid = document.getElementById('adminCalGrid');
+    document.getElementById('adminCalLabel').textContent = formatMonth(adminYear, adminMonth);
+    const firstDay = new Date(adminYear, adminMonth, 1).getDay();
+    const daysInMonth = new Date(adminYear, adminMonth + 1, 0).getDate();
+    const daysInPrev = new Date(adminYear, adminMonth, 0).getDate();
+    grid.innerHTML = '';
+    const total = Math.ceil((firstDay + daysInMonth) / 7) * 7;
+    for (let i = 0; i < total; i++) {
+      let day, month, year, isOther = false;
+      if (i < firstDay) { day = daysInPrev - firstDay + i + 1; month = adminMonth - 1; year = adminYear; if (month < 0) { month = 11; year--; } isOther = true; }
+      else if (i >= firstDay + daysInMonth) { day = i - firstDay - daysInMonth + 1; month = adminMonth + 1; year = adminYear; if (month > 11) { month = 0; year++; } isOther = true; }
+      else { day = i - firstDay + 1; month = adminMonth; year = adminYear; }
+      const date = new Date(year, month, day);
+      const isToday = date.toDateString() === today.toDateString();
+      const isSelected = adminSelectedDate && date.toDateString() === adminSelectedDate.toDateString();
+      const events = getAdminEventsForDate(date);
+      const workshops = isOther ? [] : getAdminWorkshopsForDate(date);
+      const allItems = [...events, ...workshops.map(w => ({ ...w, type: 'oficina' }))];
+      const cell = document.createElement('div');
+      cell.className = 'calendar-day admin-calendar-day' + (isOther ? ' other-month' : '') + (isToday ? ' today' : '') + (isSelected ? ' selected' : '');
+      const num = document.createElement('div'); num.className = 'day-num'; num.textContent = day;
+      const evC = document.createElement('div'); evC.className = 'day-events';
+      allItems.slice(0, 2).forEach(ev => { const d = document.createElement('div'); d.className = `day-event-dot ${ev.type}`; d.textContent = ev.title.slice(0, 20); evC.appendChild(d); });
+      if (allItems.length > 2) { const more = document.createElement('div'); more.className = 'day-event-dot'; more.style.background = 'var(--color-subtle)'; more.textContent = `+${allItems.length - 2}`; evC.appendChild(more); }
+      cell.appendChild(num); cell.appendChild(evC);
+      if (!isOther) cell.addEventListener('click', () => selectAdminDay(date));
+      grid.appendChild(cell);
+    }
+  }
+  function buildDayHTML(events, workshops) {
+    if (events.length === 0 && workshops.length === 0)
+      return `<div style="color:var(--color-muted);font-size:var(--text-sm);">Nenhum evento neste dia.</div>`;
+    return events.map(ev => `
+      <div class="event-card" style="margin-bottom:var(--space-3);">
+        <div class="event-card-stripe stripe-${ev.type}"></div>
+        <div class="event-card-body">
+          <div class="event-card-time">${ev.time}</div>
+          <div class="event-card-title" style="font-size:var(--text-base);">${ev.title}</div>
+          <span class="badge badge-${ev.type} badge-dot">${Calendar.typeLabel(ev.type)}</span>
+        </div>
+      </div>`).join('') +
+    workshops.map(w => `
+      <div class="event-card" style="margin-bottom:var(--space-3);">
+        <div class="event-card-stripe stripe-oficina"></div>
+        <div class="event-card-body">
+          <div class="event-card-time">${w.time || ''} · Oficina recorrente</div>
+          <div class="event-card-title" style="font-size:var(--text-base);">${w.title}</div>
+          <span class="badge badge-oficina badge-dot">Oficina</span>
+          ${w.instructor_name ? `<span class="badge badge-neutral" style="margin-left:4px;">${w.instructor_name}</span>` : ''}
+        </div>
+      </div>`).join('');
+  }
+
+  function openDaySheet(title, html) {
+    document.getElementById('sheetDayTitle').textContent = title;
+    document.getElementById('sheetDayEvents').innerHTML = html;
+    document.getElementById('daySheet').classList.add('open');
+    document.getElementById('daySheetOverlay').classList.add('open');
+  }
+  function closeDaySheet() {
+    document.getElementById('daySheet').classList.remove('open');
+    document.getElementById('daySheetOverlay').classList.remove('open');
+  }
+
+  function selectAdminDay(date) {
+    adminSelectedDate = date;
+    renderAdminCalendar();
+    const events = getAdminEventsForDate(date);
+    const workshops = getAdminWorkshopsForDate(date);
+    const title = formatDate(date, { weekday: 'long', day: 'numeric', month: 'long' });
+    const html = buildDayHTML(events, workshops);
+
+    if (window.innerWidth <= 900) {
+      openDaySheet(title, html);
+    } else {
+      document.getElementById('adminDayTitle').textContent = title;
+      document.getElementById('adminDayEvents').innerHTML = html;
+    }
+  }
+  document.getElementById('adminCalPrev').addEventListener('click', () => { adminMonth--; if (adminMonth < 0) { adminMonth = 11; adminYear--; } loadAdminCalendar(); });
+  document.getElementById('adminCalNext').addEventListener('click', () => { adminMonth++; if (adminMonth > 11) { adminMonth = 0; adminYear++; } loadAdminCalendar(); });
+
+  // ── Events table ──
+  async function renderEventsTable() {
+    const { data } = await sb.from('events').select('*').order('date').order('time');
+    const events = (data || []).map(normalizeEvent);
+    const ticketLabel = { gratuito: '🎟️ Gratuito', financeiro: '💰 Financeiro', contribuicao: '🤝 Contribuição' };
+    document.getElementById('eventsTable').innerHTML = events.length ? events.map(ev => `
+      <tr>
+        <td style="width:48px;">
+          ${ev.image_url ? `<img src="${ev.image_url}" style="width:40px;height:40px;object-fit:cover;border-radius:var(--radius-md);border:1px solid var(--color-border-light);">` : '<div style="width:40px;height:40px;background:var(--color-cream);border-radius:var(--radius-md);display:flex;align-items:center;justify-content:center;font-size:18px;">🎭</div>'}
+        </td>
+        <td>
+          <span style="font-weight:600;">${ev.title}</span>
+          ${ev.instructor ? `<div style="font-size:var(--text-xs);color:var(--color-muted);">${ev.instructor}</div>` : ''}
+        </td>
+        <td><span class="badge badge-${ev.type} badge-dot">${Calendar.typeLabel(ev.type)}</span></td>
+        <td>${formatDate(ev.date, { day: 'numeric', month: 'short', year: 'numeric' })}</td>
+        <td style="white-space:nowrap;">${ev.time || '—'}</td>
+        <td style="white-space:nowrap;color:var(--color-muted);">${ev.time_end || '—'}</td>
+        <td style="color:var(--color-muted);">${ev.capacity ? ev.capacity + ' vagas' : '—'}</td>
+        <td style="white-space:nowrap;">
+          <span class="badge ${ev.ticket_type === 'gratuito' ? 'badge-success' : ev.ticket_type === 'financeiro' ? 'badge-neutral' : 'badge-apresentacao'}" style="font-size:10px;">
+            ${ticketLabel[ev.ticket_type] || '🎟️ Gratuito'}
+          </span>
+          ${ev.price && ev.ticket_type !== 'gratuito' ? `<div style="font-size:var(--text-xs);color:var(--color-muted);">R$ ${ev.price}</div>` : ''}
+        </td>
+        <td style="color:var(--color-muted);">${ev.location || '—'}</td>
+        <td style="display:flex;gap:4px;align-items:center;">
+          <button class="btn btn-ghost btn-sm btn-icon" title="Editar" onclick="editEvent(${JSON.stringify(ev).replace(/"/g,'&quot;')})">✏️</button>
+          <button class="btn btn-ghost btn-sm btn-icon" title="Apagar" onclick="deleteEvent('${ev.id}','${(ev.image_url||'').replace(/'/g,'')}')">🗑</button>
+        </td>
+      </tr>`).join('')
+    : '<tr><td colspan="10" class="empty-state" style="padding:var(--space-8);">Nenhum evento cadastrado.</td></tr>';
+  }
+
+  // ── Ticket type selector ──
+  function selectTicket(val) {
+    document.getElementById('evTicketType').value = val;
+    document.querySelectorAll('.ticket-opt').forEach(el => {
+      const active = el.dataset.val === val;
+      el.style.borderColor = active ? 'var(--color-red)' : 'var(--color-border)';
+      el.style.background   = active ? 'rgba(217,59,42,0.06)' : '';
+      el.style.color        = active ? 'var(--color-red-dark)' : '';
+    });
+    const priceField = document.getElementById('evPriceField');
+    const priceLabel = document.getElementById('evPriceLabel');
+    if (val === 'gratuito') {
+      priceField.style.display = 'none';
+    } else {
+      priceField.style.display = '';
+      priceLabel.textContent = val === 'contribuicao' ? 'Valor sugerido (R$) — opcional' : 'Valor (R$)';
+    }
+  }
+
+  // ── Image preview ──
+  function previewEventImage(input) {
+    const file = input.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = e => {
+      document.getElementById('evImagePreview').src = e.target.result;
+      document.getElementById('evImagePreviewWrap').style.display = '';
+    };
+    reader.readAsDataURL(file);
+  }
+
+  function removeEventImage() {
+    document.getElementById('evImageFile').value = '';
+    document.getElementById('evImagePreview').src = '';
+    document.getElementById('evImagePreviewWrap').style.display = 'none';
+    document.getElementById('evEditId')._keepImage = false;
+  }
+
+  // ── Open modal helpers ──
+  function openNewEventModal() {
+    document.getElementById('evEditId').value = '';
+    document.getElementById('evEditId')._keepImage = false;
+    document.getElementById('evModalTitle').textContent = 'Novo evento';
+    document.getElementById('evSubmitBtn').textContent = 'Criar evento';
+    document.getElementById('evTitle').value = '';
+    document.getElementById('evType').value = 'apresentacao';
+    document.getElementById('evDate').value = '';
+    document.getElementById('evTime').value = '';
+    document.getElementById('evTimeEnd').value = '';
+    document.getElementById('evLocation').value = '';
+    document.getElementById('evCapacity').value = '';
+    document.getElementById('evInstructor').value = '';
+    document.getElementById('evDesc').value = '';
+    document.getElementById('evPrice').value = '';
+    document.getElementById('evImageFile').value = '';
+    document.getElementById('evImagePreview').src = '';
+    document.getElementById('evImagePreviewWrap').style.display = 'none';
+    selectTicket('gratuito');
+    openModal('newEventModal');
+  }
+
+  function editEvent(ev) {
+    document.getElementById('evEditId').value = ev.id;
+    document.getElementById('evEditId')._keepImage = !!ev.image_url;
+    document.getElementById('evModalTitle').textContent = 'Editar evento';
+    document.getElementById('evSubmitBtn').textContent = 'Salvar alterações';
+    document.getElementById('evTitle').value = ev.title || '';
+    document.getElementById('evType').value = ev.type || 'apresentacao';
+    // date comes as Date object after normalizeEvent
+    const d = ev.date instanceof Date ? ev.date : new Date(ev.date);
+    document.getElementById('evDate').value = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+    document.getElementById('evTime').value = ev.time || '';
+    document.getElementById('evTimeEnd').value = ev.time_end || '';
+    document.getElementById('evLocation').value = ev.location || '';
+    document.getElementById('evCapacity').value = ev.capacity || '';
+    document.getElementById('evInstructor').value = ev.instructor || '';
+    document.getElementById('evDesc').value = ev.description || '';
+    document.getElementById('evPrice').value = ev.price || '';
+    selectTicket(ev.ticket_type || 'gratuito');
+    // Show existing image
+    if (ev.image_url) {
+      document.getElementById('evImagePreview').src = ev.image_url;
+      document.getElementById('evImagePreviewWrap').style.display = '';
+    } else {
+      document.getElementById('evImagePreview').src = '';
+      document.getElementById('evImagePreviewWrap').style.display = 'none';
+    }
+    document.getElementById('evImageFile').value = '';
+    openModal('newEventModal');
+  }
+
+  // ── Workshops table ──
+  async function renderWorkshopsTable() {
+    const { data } = await sb.from('workshops').select('*').order('day_of_week');
+    const ws = data || [];
+    document.getElementById('workshopsTable').innerHTML = ws.map(w => {
+      const pct = Math.round(w.enrolled / w.capacity * 100);
+      return `<tr>
+        <td><span style="font-weight:600;">${w.title}</span></td>
+        <td>${w.instructor_name}</td>
+        <td>${w.day_of_week}</td>
+        <td>${w.time}</td>
+        <td style="color:var(--color-muted);">${w.duration}</td>
+        <td>
+          <div class="flex items-center gap-2">
+            <div style="width:60px;height:4px;background:var(--color-border-light);border-radius:var(--radius-full);overflow:hidden;">
+              <div style="height:100%;width:${pct}%;background:var(--gradient-brand);border-radius:var(--radius-full);"></div>
+            </div>
+            <span style="font-size:var(--text-xs);color:var(--color-muted);">${w.enrolled}/${w.capacity}</span>
+          </div>
+        </td>
+        <td><span class="badge ${w.enrolled >= w.capacity ? 'badge-neutral' : 'badge-success'}">${w.enrolled >= w.capacity ? 'Lotado' : 'Com vagas'}</span></td>
+        <td style="display:flex;gap:4px;">
+          <button class="btn btn-ghost btn-sm btn-icon" onclick="editWorkshop(${JSON.stringify(w).replace(/"/g,'&quot;')})">✏️</button>
+          <button class="btn btn-ghost btn-sm btn-icon" onclick="deleteWorkshop('${w.id}')">🗑</button>
+        </td>
+      </tr>`;
+    }).join('');
+  }
+
+  // ── Members grid ──
+  async function renderMembersGrid() {
+    const { data: members } = await sb.from('profiles').select('*').eq('role', 'member').order('name');
+    const { data: workshops } = await sb.from('workshops').select('id, title, instructor_id');
+    const ms = members || [];
+    const ws = workshops || [];
+    document.getElementById('membersGrid').innerHTML = ms.map(m => {
+      const mws = ws.filter(w => w.instructor_id === m.id);
+      return `
+        <div class="member-card" style="flex-direction:column;align-items:flex-start;gap:var(--space-4);">
+          <div class="flex items-center gap-4" style="width:100%;">
+            <div class="member-avatar-lg">${m.initials || m.name.slice(0,2).toUpperCase()}</div>
+            <div class="member-info">
+              <div class="member-name">${m.name}</div>
+              <div class="member-email">${m.email}</div>
+            </div>
+          </div>
+          <div class="member-workshops">
+            ${mws.length ? mws.map(w => `<span class="badge badge-oficina">${w.title}</span>`).join('') : '<span class="badge badge-neutral">Sem oficinas</span>'}
+          </div>
+        </div>`;
+    }).join('');
+    // Populate instructor select
+    const sel = document.getElementById('wsInstructor');
+    sel.innerHTML = '';
+    ms.forEach(m => { const o = document.createElement('option'); o.value = m.id; o.textContent = m.name; sel.appendChild(o); });
+  }
+
+  // ── Save event (create + edit) ──
+  async function saveEvent() {
+    const title = document.getElementById('evTitle').value.trim();
+    if (!title) { showToast('Preencha o título do evento.', 'error'); return; }
+    const editId = document.getElementById('evEditId').value;
+    const btn = document.getElementById('evSubmitBtn');
+    btn.disabled = true; btn.textContent = 'Salvando…';
+
+    // Upload de imagem se selecionada
+    let image_url = null;
+    const fileInput = document.getElementById('evImageFile');
+    const keepImage = document.getElementById('evEditId')._keepImage;
+
+    if (fileInput.files[0]) {
+      const file = fileInput.files[0];
+      if (file.size > 5 * 1024 * 1024) {
+        showToast('Imagem muito grande (máx. 5 MB).', 'error');
+        btn.disabled = false; btn.textContent = editId ? 'Salvar alterações' : 'Criar evento';
+        return;
+      }
+      const ext = file.name.split('.').pop();
+      const path = `${Date.now()}.${ext}`;
+      const { error: upErr } = await sb.storage.from('event-images').upload(path, file, { upsert: true });
+      if (upErr) { showToast('Erro ao enviar imagem: ' + upErr.message, 'error'); btn.disabled = false; btn.textContent = editId ? 'Salvar alterações' : 'Criar evento'; return; }
+      const { data: urlData } = sb.storage.from('event-images').getPublicUrl(path);
+      image_url = urlData.publicUrl;
+    } else if (editId && keepImage) {
+      // Mantém imagem existente — busca do banco
+      const { data: existing } = await sb.from('events').select('image_url').eq('id', editId).single();
+      image_url = existing?.image_url || null;
+    }
+
+    const ticketType = document.getElementById('evTicketType').value;
+    const payload = {
+      title,
+      type:        document.getElementById('evType').value,
+      date:        document.getElementById('evDate').value,
+      time:        document.getElementById('evTime').value || null,
+      time_end:    document.getElementById('evTimeEnd').value || null,
+      location:    document.getElementById('evLocation').value || null,
+      capacity:    parseInt(document.getElementById('evCapacity').value) || null,
+      instructor:  document.getElementById('evInstructor').value || null,
+      description: document.getElementById('evDesc').value || null,
+      ticket_type: ticketType,
+      free:        ticketType === 'gratuito',
+      price:       document.getElementById('evPrice').value || null,
+      image_url,
+    };
+
+    let error;
+    if (editId) {
+      ({ error } = await sb.from('events').update(payload).eq('id', editId));
+    } else {
+      ({ error } = await sb.from('events').insert(payload));
+    }
+    btn.disabled = false; btn.textContent = editId ? 'Salvar alterações' : 'Criar evento';
+    if (error) { showToast('Erro: ' + error.message, 'error'); return; }
+    showToast(editId ? 'Evento atualizado!' : 'Evento criado com sucesso!');
+    closeModal('newEventModal');
+    renderEventsTable();
+    loadDashboard();
+  }
+
+  function toggleDayLabel(cb) {
+    const label = cb.closest('label');
+    if (cb.checked) {
+      label.style.borderColor = 'var(--color-red)';
+      label.style.background = 'rgba(217,59,42,0.07)';
+      label.style.color = 'var(--color-red-dark)';
+    } else {
+      label.style.borderColor = 'var(--color-border)';
+      label.style.background = '';
+      label.style.color = '';
+    }
+  }
+
+  function editWorkshop(w) {
+    // pre-fill modal
+    document.getElementById('wsEditId').value = w.id;
+    document.getElementById('wsTitle').value = w.title || '';
+    document.getElementById('wsTime').value = w.time || '';
+    document.getElementById('wsDuration').value = w.duration || '';
+    document.getElementById('wsCapacity').value = w.capacity || '';
+    document.getElementById('wsDesc').value = w.description || '';
+    // days
+    const activeDays = (w.day_of_week || '').split(',').map(d => d.trim());
+    document.querySelectorAll('#wsDaysGroup input[type=checkbox]').forEach(cb => {
+      cb.checked = activeDays.includes(cb.value);
+      toggleDayLabel(cb);
+    });
+    // instructor
+    const sel = document.getElementById('wsInstructor');
+    for (const opt of sel.options) { if (opt.value === w.instructor_id) { sel.value = opt.value; break; } }
+    // update modal UI
+    document.getElementById('wsModalTitle').textContent = 'Editar oficina';
+    document.getElementById('wsSubmitBtn').textContent = 'Salvar alterações';
+    openModal('newWorkshopModal');
+  }
+
+  async function saveWorkshop() {
+    const title = document.getElementById('wsTitle').value.trim();
+    if (!title) { showToast('Preencha o nome da oficina.', 'error'); return; }
+    const days = [...document.querySelectorAll('#wsDaysGroup input[type=checkbox]:checked')].map(c => c.value);
+    if (!days.length) { showToast('Selecione pelo menos um dia da semana.', 'error'); return; }
+    const instructorId = document.getElementById('wsInstructor').value;
+    const instructorName = document.getElementById('wsInstructor').selectedOptions[0]?.text || '';
+    const editId = document.getElementById('wsEditId').value;
+    const payload = {
+      title,
+      description: document.getElementById('wsDesc').value,
+      instructor_id: instructorId || null,
+      instructor_name: instructorName,
+      day_of_week: days.join(', '),
+      time: document.getElementById('wsTime').value,
+      duration: document.getElementById('wsDuration').value,
+      capacity: parseInt(document.getElementById('wsCapacity').value) || 15,
+    };
+    let error;
+    if (editId) {
+      ({ error } = await sb.from('workshops').update(payload).eq('id', editId));
+    } else {
+      ({ error } = await sb.from('workshops').insert(payload));
+    }
+    if (error) { showToast('Erro: ' + error.message, 'error'); return; }
+    showToast(editId ? 'Oficina atualizada!' : 'Oficina criada com sucesso!');
+    // reset
+    document.getElementById('wsEditId').value = '';
+    document.getElementById('wsModalTitle').textContent = 'Nova oficina';
+    document.getElementById('wsSubmitBtn').textContent = 'Criar oficina';
+    document.querySelectorAll('#wsDaysGroup input[type=checkbox]').forEach(cb => { cb.checked = false; toggleDayLabel(cb); });
+    closeModal('newWorkshopModal');
+    renderWorkshopsTable();
+  }
+
+  async function saveMember() {
+    const name = document.getElementById('memName').value.trim();
+    const email = document.getElementById('memEmail').value.trim();
+    const password = document.getElementById('memPass').value;
+    if (!name || !email) { showToast('Preencha nome e e-mail.', 'error'); return; }
+    const { error } = await sb.auth.signUp({ email, password: password || '123456', options: { data: { name, role: 'member', initials: name.split(' ').map(p=>p[0]).slice(0,2).join('').toUpperCase() } } });
+    if (error) { showToast('Erro ao criar membro.', 'error'); return; }
+    showToast(`Membro ${name} criado!`);
+    closeModal('newMemberModal');
+    renderMembersGrid();
+  }
+
+  async function deleteEvent(id, imageUrl) {
+    if (!confirm('Apagar este evento? Esta ação não pode ser desfeita.')) return;
+    // Apaga imagem do storage se existir
+    if (imageUrl) {
+      const path = imageUrl.split('/event-images/')[1];
+      if (path) await sb.storage.from('event-images').remove([path]);
+    }
+    await sb.from('events').delete().eq('id', id);
+    renderEventsTable();
+    loadDashboard();
+    showToast('Evento removido.');
+  }
+
+  async function deleteAllEvents() {
+    const total = document.getElementById('eventsTable').querySelectorAll('tr').length;
+    if (!total) { showToast('Nenhum evento para apagar.', 'error'); return; }
+    if (!confirm(`Apagar TODOS os eventos (${total})? Esta ação não pode ser desfeita.`)) return;
+    // Apaga imagens do storage
+    const { data: evs } = await sb.from('events').select('image_url');
+    const paths = (evs || []).map(e => e.image_url).filter(Boolean).map(u => u.split('/event-images/')[1]).filter(Boolean);
+    if (paths.length) await sb.storage.from('event-images').remove(paths);
+    await sb.from('events').delete().neq('id', '00000000-0000-0000-0000-000000000000');
+    renderEventsTable();
+    loadDashboard();
+    showToast('Todos os eventos foram removidos.');
+  }
+
+  // ── Dashboard ──
+  async function loadDashboard() {
+    const [{ data: evs }, { data: ws }, { data: ms }, { data: upcoming }] = await Promise.all([
+      sb.from('events').select('type').gte('date', `${today.getFullYear()}-${String(today.getMonth()+1).padStart(2,'0')}-01`),
+      sb.from('workshops').select('id, title, enrolled, capacity'),
+      sb.from('profiles').select('id, name, initials, email').eq('role', 'member'),
+      sb.from('events').select('*').gte('date', today.toISOString().slice(0,10)).order('date').order('time').limit(5),
+    ]);
+    document.getElementById('statApresentacoes').textContent = (evs||[]).filter(e=>e.type==='apresentacao').length;
+    document.getElementById('statOficinas').textContent = (ws||[]).length;
+    document.getElementById('statMembros').textContent = (ms||[]).length;
+    document.getElementById('statEventos').textContent = (evs||[]).length;
+    document.getElementById('dashUpcoming').innerHTML = (upcoming||[]).map(ev => {
+      const d = normalizeEvent(ev);
+      return `<div class="event-card" style="padding:var(--space-4);">
+        <div class="event-card-stripe stripe-${d.type}"></div>
+        <div class="event-card-body">
+          <div class="event-card-time">${formatDate(d.date, { day: 'numeric', month: 'short' })} · ${d.time}</div>
+          <div class="event-card-title" style="font-size:var(--text-base);">${d.title}</div>
+          <span class="badge badge-${d.type} badge-dot">${Calendar.typeLabel(d.type)}</span>
+        </div>
+      </div>`;
+    }).join('') || '<p style="color:var(--color-muted);">Nenhum evento próximo.</p>';
+    document.getElementById('dashMembers').innerHTML = (ms||[]).map(m => `
+      <div class="flex items-center gap-3" style="padding:var(--space-3) 0;border-bottom:1px solid var(--color-border-light);">
+        <div class="user-avatar" style="background:var(--gradient-brand);width:36px;height:36px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:700;color:#fff;font-size:var(--text-sm);">${m.initials||'?'}</div>
+        <div style="flex:1;"><div style="font-weight:600;font-size:var(--text-sm);">${m.name}</div></div>
+      </div>`).join('');
+    document.getElementById('workshopOccupancy').innerHTML = (ws||[]).map(w => {
+      const pct = Math.round(w.enrolled / w.capacity * 100);
+      return `<div class="flex items-center gap-4">
+        <div style="flex:0 0 200px;font-size:var(--text-sm);font-weight:500;">${w.title}</div>
+        <div style="flex:1;height:8px;background:var(--color-border-light);border-radius:var(--radius-full);overflow:hidden;">
+          <div style="height:100%;width:${pct}%;background:${pct>=90?'var(--color-red)':pct>=70?'var(--color-orange)':'var(--gradient-brand)'};border-radius:var(--radius-full);"></div>
+        </div>
+        <div style="flex:0 0 80px;font-size:var(--text-xs);color:var(--color-muted);text-align:right;">${w.enrolled}/${w.capacity} (${pct}%)</div>
+      </div>`;
+    }).join('');
+  }
+
+  async function deleteWorkshop(id) {
+    if (!confirm('Apagar esta oficina? Esta ação não pode ser desfeita.')) return;
+    const { error } = await sb.from('workshops').delete().eq('id', id);
+    if (error) { showToast('Erro ao remover oficina: ' + error.message, 'error'); return; }
+    renderWorkshopsTable();
+    showToast('Oficina removida.');
+  }
+
+  // ── Mobile sidebar ──
+  function openSidebar() {
+    document.querySelector('.sidebar').classList.add('open');
+    document.getElementById('sidebarOverlay').classList.add('open');
+  }
+  function closeSidebar() {
+    document.querySelector('.sidebar').classList.remove('open');
+    document.getElementById('sidebarOverlay').classList.remove('open');
+  }
+  // Close sidebar when nav item clicked on mobile
+  document.querySelectorAll('.nav-item').forEach(item => {
+    item.addEventListener('click', () => { if (window.innerWidth <= 768) closeSidebar(); });
+  });
+
+  // ── Close modals on overlay click ──
+  document.querySelectorAll('.modal-overlay').forEach(overlay => {
+    overlay.addEventListener('click', e => { if (e.target === overlay) overlay.classList.remove('open'); });
+  });
+
+  // ── Init ──
+  (async () => {
+    const profile = await Auth.requireAuth('admin');
+    if (!profile) return;
+    document.getElementById('sidebarName').textContent = profile.name;
+    document.getElementById('sidebarInitials').textContent = profile.initials || profile.name.slice(0,2).toUpperCase();
+    document.getElementById('evDate').valueAsDate = today;
+    await Promise.all([loadDashboard(), renderEventsTable(), renderWorkshopsTable(), renderMembersGrid()]);
+  })();
+</script>
+</body>
+</html>

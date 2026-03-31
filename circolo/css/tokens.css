@@ -1,0 +1,138 @@
+/* ================================================
+   CircoLo Design System — Tokens
+   Espaço Cultural Círculo de Criação
+   ================================================ */
+
+:root {
+  /* ── Brand Colors ── */
+  --color-red:          #D93B2A;
+  --color-red-light:    #E8604F;
+  --color-red-dark:     #B82E1F;
+
+  --color-orange:       #F07828;
+  --color-orange-light: #F59550;
+  --color-orange-dark:  #C85E18;
+
+  --color-gold:         #F5C428;
+  --color-gold-light:   #F9D560;
+  --color-gold-dark:    #D4A510;
+
+  /* ── Neutrals (warm-tinted) ── */
+  --color-ink:          #1A1614;
+  --color-charcoal:     #2C2420;
+  --color-muted:        #6B6058;
+  --color-subtle:       #9E948C;
+  --color-border:       #E8E0D8;
+  --color-border-light: #F0EAE2;
+  --color-cream:        #F5EFE6;
+  --color-warm-white:   #FAF7F2;
+  --color-white:        #FFFFFF;
+
+  /* ── Semantic Colors ── */
+  --color-success:      #2D8C5F;
+  --color-warning:      #C87820;
+  --color-error:        #C83030;
+  --color-info:         #3070C8;
+
+  /* ── Gradients ── */
+  --gradient-brand:     linear-gradient(135deg, #D93B2A 0%, #F07828 48%, #F5C428 100%);
+  --gradient-brand-v:   linear-gradient(180deg, #D93B2A 0%, #F07828 48%, #F5C428 100%);
+  --gradient-hero:      linear-gradient(135deg, #1A1614 0%, #2C2420 100%);
+  --gradient-warm:      linear-gradient(135deg, #FAF7F2 0%, #F0E8DC 100%);
+  --gradient-card:      linear-gradient(180deg, rgba(255,255,255,0) 0%, rgba(26,22,20,0.06) 100%);
+  --gradient-overlay:   linear-gradient(to top, rgba(26,22,20,0.85) 0%, rgba(26,22,20,0.1) 100%);
+
+  /* ── Category Colors (event types) ── */
+  --cat-apresentacao:   #D93B2A;
+  --cat-oficina:        #F07828;
+  --cat-programacao:    #F5C428;
+  --cat-especial:       #7B4FBF;
+
+  /* ── Typography ── */
+  --font-display:       'Playfair Display', 'Georgia', serif;
+  --font-body:          'Inter', 'Helvetica Neue', sans-serif;
+
+  --text-xs:    0.75rem;    /* 12px */
+  --text-sm:    0.875rem;   /* 14px */
+  --text-base:  1rem;       /* 16px */
+  --text-md:    1.125rem;   /* 18px */
+  --text-lg:    1.25rem;    /* 20px */
+  --text-xl:    1.5rem;     /* 24px */
+  --text-2xl:   1.875rem;   /* 30px */
+  --text-3xl:   2.25rem;    /* 36px */
+  --text-4xl:   3rem;       /* 48px */
+  --text-5xl:   3.75rem;    /* 60px */
+
+  --weight-regular: 400;
+  --weight-medium:  500;
+  --weight-semibold:600;
+  --weight-bold:    700;
+
+  --leading-tight:  1.2;
+  --leading-snug:   1.375;
+  --leading-normal: 1.5;
+  --leading-relaxed:1.65;
+
+  --tracking-tight:  -0.02em;
+  --tracking-normal:  0em;
+  --tracking-wide:    0.04em;
+  --tracking-wider:   0.08em;
+  --tracking-widest:  0.14em;
+
+  /* ── Spacing ── */
+  --space-1:   0.25rem;   /* 4px */
+  --space-2:   0.5rem;    /* 8px */
+  --space-3:   0.75rem;   /* 12px */
+  --space-4:   1rem;      /* 16px */
+  --space-5:   1.25rem;   /* 20px */
+  --space-6:   1.5rem;    /* 24px */
+  --space-8:   2rem;      /* 32px */
+  --space-10:  2.5rem;    /* 40px */
+  --space-12:  3rem;      /* 48px */
+  --space-16:  4rem;      /* 64px */
+  --space-20:  5rem;      /* 80px */
+  --space-24:  6rem;      /* 96px */
+  --space-32:  8rem;      /* 128px */
+
+  /* ── Border Radius ── */
+  --radius-xs:   2px;
+  --radius-sm:   6px;
+  --radius-md:   10px;
+  --radius-lg:   16px;
+  --radius-xl:   24px;
+  --radius-2xl:  32px;
+  --radius-full: 9999px;
+
+  /* ── Shadows ── */
+  --shadow-xs:  0 1px 2px rgba(26,22,20,0.06);
+  --shadow-sm:  0 2px 6px rgba(26,22,20,0.08), 0 1px 2px rgba(26,22,20,0.06);
+  --shadow-md:  0 4px 16px rgba(26,22,20,0.10), 0 2px 4px rgba(26,22,20,0.06);
+  --shadow-lg:  0 8px 32px rgba(26,22,20,0.12), 0 4px 8px rgba(26,22,20,0.06);
+  --shadow-xl:  0 16px 48px rgba(26,22,20,0.16), 0 8px 16px rgba(26,22,20,0.08);
+  --shadow-2xl: 0 24px 64px rgba(26,22,20,0.22), 0 12px 24px rgba(26,22,20,0.10);
+  --shadow-brand: 0 8px 32px rgba(217,59,42,0.30), 0 2px 8px rgba(217,59,42,0.15);
+
+  /* ── Motion ── */
+  --ease-out:    cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-in-out: cubic-bezier(0.4, 0, 0.2, 1);
+  --ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
+
+  --duration-instant: 80ms;
+  --duration-fast:    150ms;
+  --duration-base:    250ms;
+  --duration-slow:    400ms;
+  --duration-slower:  600ms;
+
+  /* ── Z-index ── */
+  --z-base:    0;
+  --z-raised:  10;
+  --z-overlay: 100;
+  --z-modal:   200;
+  --z-toast:   300;
+  --z-max:     9999;
+
+  /* ── Layout ── */
+  --sidebar-width:  260px;
+  --content-max:    1280px;
+  --content-narrow: 760px;
+}
