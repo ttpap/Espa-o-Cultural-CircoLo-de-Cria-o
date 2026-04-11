@@ -262,7 +262,10 @@
 
     <div class="sidebar-footer">
       <div class="user-chip">
-        <div class="user-avatar" id="sidebarInitials">AB</div>
+        <div class="user-avatar" id="sidebarInitials" style="background:var(--gradient-brand);position:relative;overflow:hidden;">
+          <img id="sidebarLogoImg" src="" alt="" style="display:none;width:100%;height:100%;object-fit:contain;padding:2px;">
+          <span id="sidebarInitialsText">AB</span>
+        </div>
         <div class="user-info">
           <div class="user-name" id="sidebarName">Oficineiro</div>
           <div class="user-role">Oficineiro</div>
@@ -327,6 +330,56 @@
         <div class="grid-2" id="memberWorkshops"></div>
       </div>
 
+      <!-- ── Modal de upload de logo da oficina ── -->
+      <div class="modal-overlay" id="logoModal" onclick="if(event.target===this)closeModal('logoModal')">
+        <div class="modal">
+          <div class="modal-header">
+            <div class="modal-title">Logo da oficina <span style="font-size:var(--text-xs);font-weight:400;color:var(--color-muted);">(opcional)</span></div>
+            <button class="btn btn-ghost btn-icon btn-sm" onclick="closeModal('logoModal')">✕</button>
+          </div>
+          <div class="modal-body">
+            <div style="margin-bottom: var(--space-5);">
+              <label style="display:block;margin-bottom:var(--space-2);font-weight:600;">Selecionar imagem</label>
+              <input type="file" id="logoFileInput" accept="image/*" style="display:block;width:100%;">
+              <p style="font-size:var(--text-xs);color:var(--color-muted);margin-top:var(--space-2);">JPG, PNG, GIF (máx. 5MB)</p>
+            </div>
+            <div id="logoPreview" style="margin-bottom:var(--space-4);text-align:center;min-height:100px;display:flex;align-items:center;justify-content:center;border:2px dashed var(--color-border-light);border-radius:var(--radius-lg);background:rgba(0,0,0,0.02);">
+              <span style="color:var(--color-muted);">Nenhuma imagem selecionada</span>
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button class="btn btn-ghost" onclick="closeModal('logoModal')">Cancelar</button>
+            <button class="btn btn-ghost" id="removeLogo" style="display:none;" onclick="removeLogo()">Remover logo</button>
+            <button class="btn btn-primary" onclick="saveLogo()" id="saveLogo">Salvar logo</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- ── Modal de upload de logo do perfil ── -->
+      <div class="modal-overlay" id="profileLogoModal" onclick="if(event.target===this)closeModal('profileLogoModal')">
+        <div class="modal">
+          <div class="modal-header">
+            <div class="modal-title">Logo do perfil <span style="font-size:var(--text-xs);font-weight:400;color:var(--color-muted);">(opcional)</span></div>
+            <button class="btn btn-ghost btn-icon btn-sm" onclick="closeModal('profileLogoModal')">✕</button>
+          </div>
+          <div class="modal-body">
+            <div style="margin-bottom: var(--space-5);">
+              <label style="display:block;margin-bottom:var(--space-2);font-weight:600;">Selecionar imagem</label>
+              <input type="file" id="profileLogoFileInput" accept="image/*" style="display:block;width:100%;">
+              <p style="font-size:var(--text-xs);color:var(--color-muted);margin-top:var(--space-2);">JPG, PNG, GIF (máx. 5MB)</p>
+            </div>
+            <div id="profileLogoPreviewModal" style="margin-bottom:var(--space-4);text-align:center;min-height:100px;display:flex;align-items:center;justify-content:center;border:2px dashed var(--color-border-light);border-radius:var(--radius-lg);background:rgba(0,0,0,0.02);">
+              <span style="color:var(--color-muted);">Nenhuma imagem selecionada</span>
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button class="btn btn-ghost" onclick="closeModal('profileLogoModal')">Cancelar</button>
+            <button class="btn btn-ghost" id="removeProfileLogo" style="display:none;" onclick="removeProfileLogo()">Remover logo</button>
+            <button class="btn btn-primary" onclick="saveProfileLogo()" id="saveProfileLogo">Salvar logo</button>
+          </div>
+        </div>
+      </div>
+
       <!-- ══ PROGRAMAÇÃO GERAL ══ -->
       <div class="tab-panel" id="panel-programacao">
         <div class="card">
@@ -368,6 +421,18 @@
                 <input class="input" type="email" id="profileEmailInput">
               </div>
               <button class="btn btn-primary" onclick="saveProfile()">Salvar alterações</button>
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="card-header">
+              <span style="font-family:var(--font-display);font-weight:600;">Logo do perfil</span>
+            </div>
+            <div class="card-body flex flex-col gap-4">
+              <div id="profileLogoPreview" style="width:100%;height:120px;border:2px dashed var(--color-border-light);border-radius:var(--radius-lg);background:rgba(0,0,0,0.02);display:flex;align-items:center;justify-content:center;overflow:hidden;">
+                <span style="color:var(--color-muted);font-size:var(--text-sm);">Nenhuma logo</span>
+              </div>
+              <button class="btn btn-primary" onclick="openProfileLogoModal()">📸 Adicionar logo</button>
             </div>
           </div>
 
@@ -491,15 +556,18 @@
   }
 
   async function renderMyWorkshops(profileId) {
-    const { data } = await sb.from('workshops').select('*').eq('instructor_id', profileId);
+    const { data } = await sb.from('workshops').select('*, instructor:instructor_id(profile_logo)').eq('instructor_id', profileId);
     const ws = data || [];
     document.getElementById('memberWorkshops').innerHTML = ws.length
       ? ws.map(w => {
           const pct = Math.round(w.enrolled / w.capacity * 100);
+          const hasWsLogo = w.logo_url;
+          const hasProfileLogo = w.instructor?.profile_logo;
+          const displayLogo = hasWsLogo || hasProfileLogo;
           return `
             <div class="ws-detail-card">
-              <div class="ws-detail-banner">
-                <div class="ws-detail-icon">🎨</div>
+              <div class="ws-detail-banner" style="position:relative;display:flex;align-items:center;gap:var(--space-3);">
+                ${displayLogo ? `<img src="${displayLogo}" alt="Logo" style="width:48px;height:48px;object-fit:contain;flex-shrink:0;background:white;border-radius:var(--radius-md);padding:4px;">` : `<div class="ws-detail-icon">🎨</div>`}
                 <div class="ws-detail-banner-title">${w.title}</div>
               </div>
               <div class="ws-detail-body">
@@ -580,17 +648,216 @@
     showToast('Senha alterada com sucesso!');
   }
 
+  // ── Logo upload ──
+  let currentWorkshopId = null;
+  let currentWorkshopLogo = null;
+
+  function openLogoModal(workshopId, workshopTitle) {
+    currentWorkshopId = workshopId;
+
+    // Busca a logo atual
+    sb.from('workshops').select('logo_url').eq('id', workshopId).single().then(({ data }) => {
+      currentWorkshopLogo = data?.logo_url || null;
+      document.getElementById('logoFileInput').value = '';
+      document.getElementById('logoFileInput').dataset.base64 = '';
+
+      if (currentWorkshopLogo) {
+        document.getElementById('logoPreview').innerHTML = `<img src="${currentWorkshopLogo}" style="max-width:100%;max-height:150px;border-radius:var(--radius-md);">`;
+        document.getElementById('removeLogo').style.display = 'inline-block';
+      } else {
+        document.getElementById('logoPreview').innerHTML = '<span style="color:var(--color-muted);">Nenhuma imagem selecionada</span>';
+        document.getElementById('removeLogo').style.display = 'none';
+      }
+    });
+
+    openModal('logoModal');
+  }
+
+  document.addEventListener('DOMContentLoaded', () => {
+    const logoInput = document.getElementById('logoFileInput');
+    if (logoInput) {
+      logoInput.addEventListener('change', (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+        if (file.size > 5 * 1024 * 1024) { showToast('Arquivo muito grande (máx. 5MB)', 'error'); return; }
+        const reader = new FileReader();
+        reader.onload = (event) => {
+          const preview = document.getElementById('logoPreview');
+          preview.innerHTML = `<img src="${event.target.result}" style="max-width:100%;max-height:150px;border-radius:var(--radius-md);">`;
+          logoInput.dataset.base64 = event.target.result;
+        };
+        reader.readAsDataURL(file);
+      });
+    }
+  });
+
+  async function saveLogo() {
+    if (!currentWorkshopId) return;
+    const logoInput = document.getElementById('logoFileInput');
+    if (!logoInput.dataset.base64) { showToast('Selecione uma imagem.', 'error'); return; }
+
+    const saveLogo = document.getElementById('saveLogo');
+    saveLogo.disabled = true;
+    saveLogo.textContent = 'Salvando...';
+
+    const { error } = await sb.from('workshops').update({ logo_url: logoInput.dataset.base64 }).eq('id', currentWorkshopId);
+    if (error) {
+      showToast('Erro ao salvar logo: ' + error.message, 'error');
+      saveLogo.disabled = false;
+      saveLogo.textContent = 'Salvar logo';
+      return;
+    }
+
+    showToast('Logo adicionada com sucesso!');
+    closeModal('logoModal');
+    saveLogo.disabled = false;
+    saveLogo.textContent = 'Salvar logo';
+    renderMyWorkshops(Auth.currentProfile.id);
+  }
+
+  async function removeLogo() {
+    if (!currentWorkshopId) return;
+    if (!confirm('Remover a logo da oficina?')) return;
+
+    const removeLogo = document.getElementById('removeLogo');
+    removeLogo.disabled = true;
+    removeLogo.textContent = 'Removendo...';
+
+    const { error } = await sb.from('workshops').update({ logo_url: null }).eq('id', currentWorkshopId);
+    if (error) {
+      showToast('Erro ao remover logo: ' + error.message, 'error');
+      removeLogo.disabled = false;
+      removeLogo.textContent = 'Remover logo';
+      return;
+    }
+
+    showToast('Logo removida com sucesso!');
+    closeModal('logoModal');
+    removeLogo.disabled = false;
+    removeLogo.textContent = 'Remover logo';
+    renderMyWorkshops(Auth.currentProfile.id);
+  }
+
+  // ── Logo do perfil ──
+  function openProfileLogoModal() {
+    sb.from('profiles').select('profile_logo').eq('id', Auth.currentProfile.id).single().then(({ data }) => {
+      document.getElementById('profileLogoFileInput').value = '';
+      document.getElementById('profileLogoFileInput').dataset.base64 = '';
+
+      if (data?.profile_logo) {
+        document.getElementById('profileLogoPreviewModal').innerHTML = `<img src="${data.profile_logo}" style="max-width:100%;max-height:150px;border-radius:var(--radius-md);">`;
+        document.getElementById('removeProfileLogo').style.display = 'inline-block';
+      } else {
+        document.getElementById('profileLogoPreviewModal').innerHTML = '<span style="color:var(--color-muted);">Nenhuma imagem selecionada</span>';
+        document.getElementById('removeProfileLogo').style.display = 'none';
+      }
+    });
+
+    openModal('profileLogoModal');
+  }
+
+  document.addEventListener('DOMContentLoaded', () => {
+    const profileLogoInput = document.getElementById('profileLogoFileInput');
+    if (profileLogoInput) {
+      profileLogoInput.addEventListener('change', (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+        if (file.size > 5 * 1024 * 1024) { showToast('Arquivo muito grande (máx. 5MB)', 'error'); return; }
+        const reader = new FileReader();
+        reader.onload = (event) => {
+          const preview = document.getElementById('profileLogoPreviewModal');
+          preview.innerHTML = `<img src="${event.target.result}" style="max-width:100%;max-height:150px;border-radius:var(--radius-md);">`;
+          profileLogoInput.dataset.base64 = event.target.result;
+        };
+        reader.readAsDataURL(file);
+      });
+    }
+  });
+
+  async function saveProfileLogo() {
+    const profileLogoInput = document.getElementById('profileLogoFileInput');
+    if (!profileLogoInput.dataset.base64) { showToast('Selecione uma imagem.', 'error'); return; }
+
+    const saveProfileLogo = document.getElementById('saveProfileLogo');
+    saveProfileLogo.disabled = true;
+    saveProfileLogo.textContent = 'Salvando...';
+
+    const { error } = await sb.from('profiles').update({ profile_logo: profileLogoInput.dataset.base64 }).eq('id', Auth.currentProfile.id);
+    if (error) {
+      showToast('Erro ao salvar logo: ' + error.message, 'error');
+      saveProfileLogo.disabled = false;
+      saveProfileLogo.textContent = 'Salvar logo';
+      return;
+    }
+
+    Auth.currentProfile.profile_logo = profileLogoInput.dataset.base64;
+    document.getElementById('profileLogoPreview').innerHTML = `<img src="${profileLogoInput.dataset.base64}" style="max-width:100%;max-height:120px;border-radius:var(--radius-md);">`;
+    // Atualizar logo na sidebar
+    document.getElementById('sidebarLogoImg').src = profileLogoInput.dataset.base64;
+    document.getElementById('sidebarLogoImg').style.display = 'block';
+    document.getElementById('sidebarInitialsText').style.display = 'none';
+    // Recarregar workshops para atualizar as logos dos cards
+    renderMyWorkshops(Auth.currentProfile.id);
+    showToast('Logo adicionada com sucesso!');
+    closeModal('profileLogoModal');
+    saveProfileLogo.disabled = false;
+    saveProfileLogo.textContent = 'Salvar logo';
+  }
+
+  async function removeProfileLogo() {
+    if (!confirm('Remover a logo do perfil?')) return;
+
+    const removeProfileLogo = document.getElementById('removeProfileLogo');
+    removeProfileLogo.disabled = true;
+    removeProfileLogo.textContent = 'Removendo...';
+
+    const { error } = await sb.from('profiles').update({ profile_logo: null }).eq('id', Auth.currentProfile.id);
+    if (error) {
+      showToast('Erro ao remover logo: ' + error.message, 'error');
+      removeProfileLogo.disabled = false;
+      removeProfileLogo.textContent = 'Remover logo';
+      return;
+    }
+
+    Auth.currentProfile.profile_logo = null;
+    document.getElementById('profileLogoPreview').innerHTML = '<span style="color:var(--color-muted);font-size:var(--text-sm);">Nenhuma logo</span>';
+    // Remover logo da sidebar
+    const initials = Auth.currentProfile.initials || Auth.currentProfile.name.slice(0,2).toUpperCase();
+    document.getElementById('sidebarInitialsText').textContent = initials;
+    document.getElementById('sidebarLogoImg').style.display = 'none';
+    document.getElementById('sidebarInitialsText').style.display = 'block';
+    // Recarregar workshops para atualizar as logos dos cards
+    renderMyWorkshops(Auth.currentProfile.id);
+    showToast('Logo removida com sucesso!');
+    closeModal('profileLogoModal');
+    removeProfileLogo.disabled = false;
+    removeProfileLogo.textContent = 'Remover logo';
+  }
+
   // ── Init ──
   (async () => {
     const profile = await Auth.requireAuth('member');
     if (!profile) return;
 
+    const initials = profile.initials || profile.name.slice(0,2).toUpperCase();
+
     document.getElementById('sidebarName').textContent = profile.name;
-    document.getElementById('sidebarInitials').textContent = profile.initials || profile.name.slice(0,2).toUpperCase();
-    document.getElementById('profileAvatar').textContent = profile.initials || profile.name.slice(0,2).toUpperCase();
+    document.getElementById('profileAvatar').textContent = initials;
     document.getElementById('profileName').textContent = profile.name;
     document.getElementById('profileNameInput').value = profile.name;
     document.getElementById('profileEmailInput').value = profile.email;
+
+    // Carregar logo do perfil
+    if (profile.profile_logo) {
+      document.getElementById('profileLogoPreview').innerHTML = `<img src="${profile.profile_logo}" style="max-width:100%;max-height:120px;border-radius:var(--radius-md);">`;
+      // Mostrar logo na sidebar
+      document.getElementById('sidebarLogoImg').src = profile.profile_logo;
+      document.getElementById('sidebarLogoImg').style.display = 'block';
+      document.getElementById('sidebarInitialsText').style.display = 'none';
+    } else {
+      document.getElementById('sidebarInitialsText').textContent = initials;
+      document.getElementById('sidebarLogoImg').style.display = 'none';
+    }
 
     const dayOfWeek = today.getDay();
     const weekStart = new Date(today); weekStart.setDate(today.getDate() - dayOfWeek);
