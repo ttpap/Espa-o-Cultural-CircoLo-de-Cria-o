@@ -326,10 +326,92 @@
       font-size: var(--text-sm);
       color: rgba(255,255,255,0.4);
       line-height: 1.7;
-      max-width: 340px;
-      margin: 0 auto var(--space-8);
+      max-width: 380px;
+      margin: 0 auto var(--space-6);
     }
+    .success-email-highlight {
+      color: rgba(255,255,255,0.75);
+      font-weight: 600;
+    }
+    .access-card {
+      background: linear-gradient(135deg, #1C1410 0%, #2A1810 100%);
+      border: 1px solid rgba(240,120,40,0.3);
+      border-radius: var(--radius-xl);
+      padding: var(--space-5) var(--space-6);
+      margin: 0 auto var(--space-6);
+      max-width: 360px;
+      text-align: left;
+    }
+    .access-card-title {
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: #F07828;
+      margin-bottom: var(--space-4);
+    }
+    .access-row {
+      display: flex;
+      align-items: flex-start;
+      gap: var(--space-3);
+      margin-bottom: var(--space-3);
+      font-size: var(--text-sm);
+    }
+    .access-row:last-child { margin-bottom: 0; }
+    .access-row-icon { font-size: 16px; flex-shrink: 0; margin-top: 1px; }
+    .access-row-label {
+      font-size: 11px;
+      color: rgba(255,255,255,0.35);
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      display: block;
+      margin-bottom: 2px;
+    }
+    .access-row-value {
+      color: rgba(255,255,255,0.85);
+      font-weight: 500;
+      word-break: break-all;
+    }
+    .access-row-link {
+      color: #F07828;
+      text-decoration: none;
+      font-weight: 600;
+    }
+    .access-row-link:hover { text-decoration: underline; }
+    .access-warning {
+      margin-top: var(--space-4);
+      padding-top: var(--space-4);
+      border-top: 1px solid rgba(255,255,255,0.07);
+      font-size: 11px;
+      color: rgba(255,255,255,0.3);
+      line-height: 1.5;
+    }
+    .btn-open-portal {
+      display: block;
+      width: 100%;
+      max-width: 360px;
+      margin: 0 auto var(--space-3);
+      padding: var(--space-3) var(--space-7);
+      border-radius: var(--radius-full);
+      font-size: var(--text-sm);
+      font-weight: 700;
+      color: #fff;
+      background: linear-gradient(135deg, #D93B2A, #F07828);
+      border: none;
+      cursor: pointer;
+      letter-spacing: 0.04em;
+      box-shadow: 0 4px 16px rgba(217,59,42,0.35);
+      transition: all 0.2s;
+      text-decoration: none;
+      text-align: center;
+    }
+    .btn-open-portal:hover { transform: translateY(-1px); box-shadow: 0 8px 24px rgba(217,59,42,0.45); }
     .btn-novo {
+      display: block;
+      width: 100%;
+      max-width: 360px;
+      margin: 0 auto;
       padding: var(--space-3) var(--space-7);
       border-radius: var(--radius-full);
       font-size: var(--text-sm);
@@ -487,9 +569,45 @@
 
     <!-- ── SUCESSO ── -->
     <div class="success-screen" id="successScreen">
-      <div class="success-anim">🎉</div>
-      <div class="success-title">Ficha enviada!</div>
-      <p class="success-msg">Recebemos seu cadastro com sucesso.<br>A coordenação do CircoLo vai entrar em contato em breve pelo WhatsApp ou e-mail informado.</p>
+      <div class="success-anim">✅</div>
+      <div class="success-title">Cadastro enviado!</div>
+      <p class="success-msg" id="successMsg">
+        Enviamos as instruções de acesso para <span class="success-email-highlight" id="successEmail"></span>
+      </p>
+
+      <div class="access-card">
+        <div class="access-card-title">Suas credenciais de acesso</div>
+        <div class="access-row">
+          <span class="access-row-icon">🔗</span>
+          <div>
+            <span class="access-row-label">Portal</span>
+            <a class="access-row-link access-row-value" href="https://circolo-criacao.vercel.app/login" target="_blank" rel="noopener">
+              circolo-criacao.vercel.app/login
+            </a>
+          </div>
+        </div>
+        <div class="access-row">
+          <span class="access-row-icon">📧</span>
+          <div>
+            <span class="access-row-label">Login</span>
+            <span class="access-row-value" id="successEmailCard"></span>
+          </div>
+        </div>
+        <div class="access-row">
+          <span class="access-row-icon">🔑</span>
+          <div>
+            <span class="access-row-label">Senha inicial</span>
+            <span class="access-row-value">123456</span>
+          </div>
+        </div>
+        <div class="access-warning">
+          ⚠️ Recomendamos trocar sua senha após o primeiro acesso.
+        </div>
+      </div>
+
+      <a class="btn-open-portal" href="https://circolo-criacao.vercel.app/login" target="_blank" rel="noopener">
+        Abrir portal de login
+      </a>
       <button class="btn-novo" onclick="resetForm()">Enviar outro cadastro</button>
     </div>
 
@@ -639,10 +757,11 @@
 
     // Cria conta auth confirmada via Edge Function (sem email de verificação)
     const email = payload.email;
+    const nome  = payload.nome;
     const fnRes = await fetch(`${SUPABASE_URL}/functions/v1/create-oficineiro`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', 'apikey': SUPABASE_ANON },
-      body: JSON.stringify({ action: 'register', email }),
+      body: JSON.stringify({ action: 'register', email, nome }),
     });
     const fnData = await fnRes.json();
     if (!fnRes.ok && fnData.error && !fnData.error.toLowerCase().includes('already')) {
@@ -659,6 +778,8 @@
     if (error) { showToast('Erro ao enviar: ' + error.message, 'error'); return; }
 
     // Sucesso
+    document.getElementById('successEmail').textContent = email;
+    document.getElementById('successEmailCard').textContent = email;
     document.getElementById('formCard').style.display = 'none';
     document.getElementById('successScreen').classList.add('show');
     window.scrollTo({ top: 0, behavior: 'smooth' });
